@@ -6,7 +6,7 @@
 
 #define BOARDROWS 8
 #define BOARDCOLS 8
-
+enum Turn {WHITE, BLACK};
 struct ChessBoardCell
 {
 	bool cellIsOccupied;
@@ -27,9 +27,10 @@ public:
 
 	// Function to move the pieces. will recieve two int[2] arrays that represet from cood and to coord on the chess table
 	void MakeMove(int* from, int* to);
+	bool CheckKingThreat();
 
 private:
-	bool turn;						// False is white turn, true is black
+	Turn turn;						// False is white turn, true is black
 	ChessPlayer* players[2];
 	// With the data which is stored in the cell we could decide if a player move is legal and execute it
 	ChessBoardCell chessBoard[BOARDROWS][BOARDCOLS];
