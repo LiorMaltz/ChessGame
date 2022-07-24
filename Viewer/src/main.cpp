@@ -4,13 +4,11 @@
 #include <cmath>
 #include <stdio.h>
 #include <glad/glad.h>
+#include <Renderer.h>
 
-
-#include "Scene.h"
 #include "ImGui.h"
 
-//#include "Matrix.h"
-
+#include "ChessMatch.h"
 
 
 /**
@@ -42,6 +40,10 @@ void Cleanup(GLFWwindow* window);
 
 // Another Function declarations
 void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer& renderer);
+ChessMatch* StartChessGame(const int& time, Scene& scene);
+void EndChessGame(ChessMatch* chessMatch);
+void InitializeChessModels(Scene& scene, ChessMatch* chessMatch);
+void MoveTransperantWindow(Scene& scene, float xSquere, float ySquere);
 
 
 
@@ -66,7 +68,13 @@ int main(int argc, char **argv)
 		return 1;
 
 	glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+
+	// Enable depth considaration
 	glEnable(GL_DEPTH_TEST);
+
+	// Enable transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	int frameBufferWidth, frameBufferHeight;
 	glfwMakeContextCurrent(window);
@@ -74,30 +82,29 @@ int main(int argc, char **argv)
 
 	Renderer renderer = Renderer();
 	Scene scene = Scene(windowWidth, windowHeight);
+
+
+
 	
 	ImGuiIO& io = SetupDearImgui(window);
 	glfwSetScrollCallback(window, ScrollCallback);
+
+	ChessMatch* chessMatch = StartChessGame(10, scene);
+
+	//scene.AddModel(Utils::LoadMeshModel("../Data/ChessData/ChessBoard.obj"));
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-		StartFrame();
-		// Replaced with MyImGui
-		//DrawImguiMenus(io, scene);
-
-		
-		/*const float radius = 2.0f;
-		float camX = sin(glfwGetTime()) * radius;
-		float camZ = cos(glfwGetTime()) * radius;
-		float camY = cos(glfwGetTime()) * radius;
-		scene.GetActiveCamera().SetCameraLookAt(glm::vec3(camX, camY, camZ), glm::vec3(0, 0, 0), glm::vec3(0.0, 1.0, 0.0));*/
-		
+		StartFrame();		
 
 
-		MyImGui(io, scene, window, renderer);
+		MyImGui(io, scene, window);
 		KeyBoardMouseEvents(scene, window, io,renderer);
 		RenderFrame(window, scene, renderer, io);
     }
-	//	Clear z-Depth array
+
+	EndChessGame(chessMatch);
+
 	Cleanup(window);
     return 0;
 }
@@ -218,7 +225,6 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 	// Get current window's screenWidth and screenHeight for scaling purposes
 	int screenWidth, screenHeight;
 	glfwGetWindowSize(window, &screenWidth, &screenHeight);
-
 	float keySpeed = 10.0f;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
@@ -288,9 +294,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 	}
 
 
-
-
-	if (io.MouseDown[2])
+	else if (io.MouseDown[2])
 	{
 		if (MousePosVec.x != io.MousePos.x || MousePosVec.y != io.MousePos.y)
 		{
@@ -321,7 +325,107 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		}
 		MousePosVec = io.MousePos;
 	}
+	else if (io.MouseClicked[0] && renderer.MouseOnSquere)
+	{
+		
+
+		MousePosVec = io.MousePos;
+	}
+
 	else
 		MousePosVec = io.MousePos;
+
+
+	// Chess Related
+	ImVec2 MouseC = io.MousePos;
+	if (MouseC[0] >= 710.0f && MouseC[0] <= 1210.0f && MouseC[1] >= 275.0f && MouseC[1] <= 775.0f)
+	{
+		renderer.MouseOnSquere = true;
+		ImVec2 squeres = { (MouseC[0] - 710.0f) / (1210.0f - 710.0f) , (MouseC[1] - 275.0f) / (775.0f - 275.0f) };
+		renderer.xSquere = squeres[0] * 8.0f;
+		renderer.ySquere = squeres[1] * 8.0f;
+		renderer.xSquere = abs(renderer.xSquere - 7);
+		renderer.ySquere = abs(renderer.ySquere - 7);
+
+		chessBoardBuffer.data[chessBoardBuffer.lastSquere[0]][chessBoardBuffer.lastSquere[1]] = 0;
+		chessBoardBuffer.lastSquere[0] = renderer.xSquere;
+		chessBoardBuffer.lastSquere[1] = renderer.ySquere;
+
+		chessBoardBuffer.data[renderer.xSquere][renderer.ySquere] = 1;
+		chessBoardBuffer.change = true;
+		//MoveTransperantWindow(scene, renderer.xSquere, renderer.ySquere);
+	}
+	else
+	{
+		renderer.MouseOnSquere = false;
+	}
+
+}
+
+
+
+ChessMatch* StartChessGame(const int& time, Scene& scene)
+{
+	ChessMatch* chessMatch = new ChessMatch(time);
+	AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->chessBoardImage);
+	InitializeChessModels(scene, chessMatch);
+	//AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->chessBoardImage);
+
+	return chessMatch;
+}
+
+void InitializeChessModels(Scene& scene , ChessMatch* chessMatch)
+{
+	// Initialize white
+
+	for (int i = 0; i < NUM_OF_PIECES; i++)
+	{
+		AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->GetPlayer(WHITE)->pieces[i]->pieceImage);
+		chessMatch->GetPlayer(WHITE)->pieces[i]->SetModel(&scene.GetModel(scene.GetModelCount() - 1));
+		chessMatch->GetPlayer(WHITE)->pieces[i]->InitializeModelPlace(0.125028f, 0.112f);
+	}
+
+	// Initialize black
+
+	for (int i = 0; i < NUM_OF_PIECES; i++)
+	{
+		AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->GetPlayer(BLACK)->pieces[i]->pieceImage);
+		chessMatch->GetPlayer(BLACK)->pieces[i]->SetModel(&scene.GetModel(scene.GetModelCount() - 1));
+		chessMatch->GetPlayer(BLACK)->pieces[i]->InitializeModelPlace(0.125028f, 0.1f);
+	}
+}
+
+void EndChessGame(ChessMatch* chessMatch)
+{
+	delete chessMatch;
+}
+
+void MoveTransperantWindow(Scene& scene, float xSquere, float ySquere)
+{
+	scene.GetModel(33).SetTransformation();
+	scene.GetModel(33).ScaleObject(vec3(0.125f), true);
+	xSquere -= 3.5; ySquere -= 3.5;
+	scene.GetModel(33).TranslateObject(vec3(0, 0, -1.05), true);
+	if (xSquere < 0)
+	{
+		xSquere = floor(xSquere);
+		scene.GetModel(33).TranslateObject(vec3(0.125028f * -xSquere - (0.125028f / 2), 0 , 0), true);
+	}
+	else
+	{
+		xSquere = ceil(xSquere);
+		scene.GetModel(33).TranslateObject(vec3(0.125028f * -xSquere + (0.125028f / 2), 0, 0), true);
+	}
+
+	if (ySquere < 0)
+	{
+		ySquere = floor(ySquere);
+		scene.GetModel(33).TranslateObject(vec3(0, 0.125028f * -ySquere - (0.125028f / 2), 0), true);
+	}
+	else
+	{
+		ySquere = ceil(ySquere);
+		scene.GetModel(33).TranslateObject(vec3(0, 0.125028f * -ySquere + (0.125028f / 2), 0), true);
+	}
 
 }

@@ -14,7 +14,7 @@ class Scene {
 public:
 	Scene(const float& windowwidth, const float& windowheight);
 
-	void AddModel(const shared_ptr<MeshModel>& mesh_model, int minWindowSize);
+	void AddModel(const shared_ptr<MeshModel>& mesh_model);
 	int GetModelCount() const;
 	MeshModel& GetModel(int index) const;
 	MeshModel& GetActiveModel() const;

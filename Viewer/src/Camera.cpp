@@ -20,7 +20,7 @@ Camera::Camera(const float& width, const float& height)
 
 	othoElsePerspective = true;
 
-	SetCameraLookAt({ 0,0,-3 }, { 0,0,-4 }, { 0,1,0 });
+	SetCameraLookAt({ 0,0,-3 }, { 0,0,0.01 }, { 0,1,0 });
 
 
 
@@ -55,10 +55,16 @@ void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const gl
 	glm::vec3 xaxis = glm::normalize(glm::cross(up, zaxis));
 	glm::vec3 yaxis = glm::normalize(glm::cross(zaxis, xaxis));
 	vec4 t = vec4(eye.x, eye.y, eye.z, 1.0);
-	view_transformation =glm::transpose( mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, t));
-	cameraRotation = glm::transpose(mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, { 0,0,0,1 }));
+	//view_transformation =glm::transpose( mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, t));
+	//cameraRotation = glm::transpose(mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, { 0,0,0,1 }));
 
-	//view_transformation=MultiplyMatrix(TranslatingTransformation(eye), view_transformation);
+	//view_transformation = mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, t);
+
+	view_transformation = glm::lookAt(eye, at, up);
+	cameraRotation = mat4({ xaxis,0 }, { yaxis,0 }, { zaxis,0 }, { 0,0,0,1 });
+
+
+
 	view_Inverse = glm::inverse(view_transformation);
 
 	cameraPosition = eye;
@@ -161,57 +167,53 @@ float Camera::GetViewVolumeNear() const
 // camera rotations functions. making the camera to rotate on it's place. or to look at other point without tanslating.
 void Camera::RotateCameraAxisX(const int& degree)
 {
-	/*glm::vec4 vecW = glm::vec4(view_transformation[3][0], view_transformation[3][1], view_transformation[3][2], 1);
-	vecW = glm::normalize(vecW);
-	glm::mat4 rotationTemp = view_transformation; rotationTemp[3][0] = 0; rotationTemp[3][1] = 0; rotationTemp[3][2] = 0; rotationTemp[3][3] = 1;
-	rotationTemp = MultiplyMatrix(rotationTemp, MultiplyMatrix(RotationTransformation(degree, 'x'), glm::inverse(rotationTemp)));
-	view_transformation = MultiplyMatrix(glm::inverse(rotationTemp), view_transformation);
-	view_Inverse = glm::inverse(view_transformation);*/
+	float deg = degree;
 
-	glm::mat4 rotationMatrix = RotationTransformation(degree, 'x');
-	view_transformation = MultiplyMatrix(view_transformation, rotationMatrix);
-	cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
-	view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
+	glm::mat4 rotationMatrix = glm::rotate(mat4(1), glm::radians(deg), glm::vec3(1, 0, 0));
+	cameraRotation = glm::rotate(cameraRotation, glm::radians(deg), glm::vec3(1, 0, 0));
+	view_Inverse = rotationMatrix * view_Inverse;
+	//glm::mat4 rotationMatrix = RotationTransformation(degree, 'x');
+	//cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
+	//view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
 	SetProjection();
 }
 void Camera::RotateCameraAxisY(const int& degree)
 {
-	//glm::vec4 vecW = glm::vec4(view_transformation[3][0] , view_transformation[3][1], view_transformation[3][2] ,1 );
-	//vecW = glm::normalize(vecW);
-	////glm::mat4 rotationTemp = view_transformation; rotationTemp[3][0] = vecW.x; rotationTemp[3][1] = vecW.y; rotationTemp[3][2] = vecW.z; rotationTemp[3][3] = vecW.w;
-	//glm::mat4 rotationTemp = view_transformation; rotationTemp[3][0] = 0; rotationTemp[3][1] = 0; rotationTemp[3][2] = 0; rotationTemp[3][3] = 1;
-	//rotationTemp = MultiplyMatrix(rotationTemp, MultiplyMatrix(RotationTransformation(degree, 'y'), glm::inverse(rotationTemp)));
-	////view_transformation = MultiplyMatrix(view_transformation, rotationTemp);
-	//view_transformation = MultiplyMatrix(glm::inverse(rotationTemp), view_transformation);
-	//view_Inverse = glm::inverse(view_transformation);
+	float deg = degree;
 
-	glm::mat4 rotationMatrix = RotationTransformation(degree, 'y');
-	view_transformation = MultiplyMatrix(view_transformation, rotationMatrix);
-	cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
-	view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
+	glm::mat4 rotationMatrix = glm::rotate(mat4(1), glm::radians(deg), glm::vec3(0, 1, 0));
+	cameraRotation = glm::rotate(cameraRotation, glm::radians(deg), glm::vec3(0, 1, 0));
+	view_Inverse = rotationMatrix * view_Inverse;
+
+	//glm::mat4 rotationMatrix = RotationTransformation(degree, 'y');
+	//view_transformation = MultiplyMatrix(view_transformation, rotationMatrix);
+	//cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
+	//view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
 	SetProjection();
 }
 void Camera::RotateCameraAxisZ(const int& degree)
 {
-	/*glm::vec4 vecW = glm::vec4(view_transformation[3][0], view_transformation[3][1], view_transformation[3][2], 1);
-	vecW = glm::normalize(vecW);
-	glm::mat4 rotationTemp = view_transformation; rotationTemp[3][0] = 0; rotationTemp[3][1] = 0; rotationTemp[3][2] = 0; rotationTemp[3][3] = 1;
-	rotationTemp = MultiplyMatrix(rotationTemp, MultiplyMatrix(RotationTransformation(degree, 'z'), glm::inverse(rotationTemp)));
-	view_transformation = MultiplyMatrix(glm::inverse(rotationTemp), view_transformation);
-	view_Inverse = glm::inverse(view_transformation);*/
+	float deg = degree;
 
-	glm::mat4 rotationMatrix = RotationTransformation(degree, 'z');
-	view_transformation = MultiplyMatrix(view_transformation, rotationMatrix);
-	cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
-	view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
+	glm::mat4 rotationMatrix = glm::rotate(mat4(1), glm::radians(deg), glm::vec3(0, 0, 1));
+	cameraRotation = glm::rotate(cameraRotation, glm::radians(deg), glm::vec3(0, 0, 1));
+	view_Inverse = rotationMatrix * view_Inverse;
+
+	//glm::mat4 rotationMatrix = RotationTransformation(degree, 'z');
+	//view_transformation = MultiplyMatrix(view_transformation, rotationMatrix);
+	//cameraRotation = MultiplyMatrix(cameraRotation, rotationMatrix);
+	//view_Inverse = MultiplyMatrix(glm::transpose(rotationMatrix), view_Inverse);
 	SetProjection();
 }
 
 
 void Camera::TranslateCamera(glm::vec3& moveVec)
 {
-	view_transformation = MultiplyMatrix(view_transformation, TranslatingTransformation(moveVec));
-	view_Inverse = MultiplyMatrix(view_Inverse, TranslatingTransformation(-moveVec));
+
+	view_transformation = translate(view_transformation, -moveVec);
+	view_Inverse = translate(view_Inverse, moveVec);
+	//view_transformation = MultiplyMatrix(view_transformation, TranslatingTransformation(moveVec));
+	//view_Inverse = MultiplyMatrix(view_Inverse, TranslatingTransformation(-moveVec));
 
 	cameraPosition += moveVec;
 }
@@ -222,14 +224,15 @@ void Camera::ScaleCamera(glm::vec3& scaleVec)
 	/*view_transformation = MultiplyMatrix(view_transformation, ScalingTransformation(scaleVec));
 	view_Inverse = glm::inverse(view_transformation);*/
 	cameraScale = MultiplyMatrix(cameraScale, ScalingTransformation(scaleVec));
-	UpdateView();
+	//UpdateView();
 }
 
 
 // not in use
 void Camera::UpdateView()
 {
-	view_transformation = MultiplyMatrix(cameraTranslation, MultiplyMatrix(cameraRotation, cameraScale));
+	view_transformation = cameraRotation * cameraTranslation * cameraScale;
+	//view_transformation = MultiplyMatrix(cameraTranslation, MultiplyMatrix(cameraRotation, cameraScale));
 	view_Inverse = glm::inverse(view_transformation);
 }
 

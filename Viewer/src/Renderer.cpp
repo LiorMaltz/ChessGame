@@ -1,4 +1,4 @@
-#define _USE_MATH_DEFINES
+﻿#define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
 
@@ -9,13 +9,37 @@
 #include <Utils.h>
 #include <iostream>
 #include "Matrix.h"
+#include "ImGui.h"
 
+
+// Lazy stuff
+
+terrain_data chessBoardBuffer;
+GLuint ssbo;
+GLuint binding;
+
+
+void costructChessBoardBuffer()
+{
+	//chessBoardBuffer.data[1][1] = 1;
+	GLuint ssbo;
+	GLuint binding = 3;//Should be equal to the binding specified in the shader code
+	glGenBuffers(1, &ssbo);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 8 * 8, chessBoardBuffer.data, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssbo);
+	chessBoardBuffer.change = false;
+}
+
+
+//
 
 
 Renderer::Renderer()
 {
 	InitOpenglRendering();
 	fillOrLine = true;
+	MouseOnSquere = false;
 }
 
 Renderer::~Renderer()
@@ -83,7 +107,8 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 			MeshModel currentModel = scene.GetModel(currentModelIndex);
 			
 			// get model's matrix
-			glm::mat4 modelTransformation = MultiplyMatrix(currentModel.GetWorldTransformation(), currentModel.GetLocalTransformation());
+			//glm::mat4 modelTransformation = MultiplyMatrix(currentModel.GetWorldTransformation(), currentModel.GetLocalTransformation());
+			glm::mat4 modelTransformation = currentModel.GetWorldTransformation() * currentModel.GetLocalTransformation();
 			glm::mat4 modelRotation = currentModel.GetRotation();
 			
 			// Set the uniform variables
@@ -92,19 +117,20 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 			glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &(cameraInverse[0].x));
 			glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &(projection[0].x));
 
-			
 			// useTexture use as a bool in fshader to tell if to use texture or shading
-			glUniform1i(glGetUniformLocation(program, "useTexture"), currentModel.GetTextureMapBool());
-			if (currentModel.GetTextureMapBool())
+
+			glUniform1i(glGetUniformLocation(program, "useTexture"), UseTexture[currentModelIndex]);
+			//glUniform1i(glGetUniformLocation(program, "useTexture"), currentModel.GetTextureMapBool());
+			if (UseTextureAsNormalMap[currentModelIndex])
 			{
 				// Bools that execute differant kinds of mapping and shading
-				glUniform1i(glGetUniformLocation(program, "useTextureAsNormalMap"), currentModel.GetUseNormalMap());
-				glUniform1i(glGetUniformLocation(program, "useEnvironmentMap"), scene.GetUseEnvironmentTexture());
+				glUniform1i(glGetUniformLocation(program, "useTextureAsNormalMap"), UseTextureAsNormalMap[currentModelIndex]);
+				glUniform1i(glGetUniformLocation(program, "useEnvironmentMap"), useEnvironmentTexture);
 				
 
 				// tell the type of texture mapping method to use
-				glUniform1i(glGetUniformLocation(program, "textureType"), currentModel.GetTextureType());
-				glUniform1f(glGetUniformLocation(program, "textureRadius"), currentModel.GetTextureRadius());
+				glUniform1i(glGetUniformLocation(program, "textureType"), textureType[currentModelIndex]);
+				glUniform1f(glGetUniformLocation(program, "textureRadius"), textureRadius[currentModelIndex]);
 
 				// sent max and min y,x coords to help calculating canonical mapping
 				vec3 maxCoords, minCoords;
@@ -161,7 +187,7 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 			glPolygonMode(GL_FRONT_AND_BACK, fillOrLine ? GL_FILL : GL_LINE);
 
 			
-			if (scene.GetUseEnvironmentTexture())
+			if (useEnvironmentTexture)
 			{
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, scene.GetSceneTexture());
@@ -172,7 +198,32 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 				glBindTexture(GL_TEXTURE_2D, currentModel.GetModelTexture());
 			}
 
+			// Change board color
+			int transperantVal;
+			if (currentModelIndex == 0 && MouseOnSquere)
+			{
+				transperantVal = 1;
+			}
+			// use only texture
+			else
+			{
+				transperantVal = 0;
+			}
+
+
+			if (chessBoardBuffer.change)
+			{
+ 				costructChessBoardBuffer();
+			}
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 3);
+			glUniform1i(glGetUniformLocation(program, "mouseOnSquere"), transperantVal);
+
+			//....
+
 			
+			//if (MouseOnSquere || currentModelIndex != 33)
+			//{
+			//}
 
 			glBindVertexArray(currentModel.GetVAO());
 			glDrawArrays(GL_TRIANGLES, 0, currentModel.GetModelSize());

@@ -4,9 +4,10 @@
 #include"ChessPlayer.h"
 
 
-#define BOARDROWS 8
-#define BOARDCOLS 8
+#define BOARD_ROWS 8
+#define BOARD_COLS 8
 enum Turn {WHITE, BLACK};
+
 struct ChessBoardCell
 {
 	bool cellIsOccupied;
@@ -20,20 +21,30 @@ struct ChessBoardCell
 class ChessMatch
 {
 public:
-	unsigned char* chessBoardImage;
+	char* chessBoardImage;
 	// Defualt/costumize constructor
-	ChessMatch(ChessPlayer* player0 = new ChessPlayer(10, 1), ChessPlayer* player1 = new ChessPlayer(10, 0), unsigned char* chessBoardImage = NULL);
+	ChessMatch(const int& time = 10);
 	~ChessMatch();
 
-	// Function to move the pieces. will recieve two int[2] arrays that represet from cood and to coord on the chess table
-	void MakeMove(int* from, int* to);
+	// If the move was executed return true, else return false
+	bool Move(const int* from, const int* to);
+	// Function to move the pieces on the board. will recieve two int[2] arrays that represet 'from' coordintes and 'to' coordintes on the chess table
+	void MakeMove(const int* from, const int* to);
+	// true - the move is legal, false the move is not legal
+	bool TestMove(const int* from, const int* to);
+	// returns: 1 - there is a mate, 2 - there is a draw, false - game can continue
+	int MateOrDraw();
+	// true - check on king. false - no check
 	bool CheckKingThreat();
 
+	ChessPlayer* GetPlayer(const int& num);
+
 private:
-	Turn turn;						// False is white turn, true is black
+	// False is white turn, true is black
+	Turn turn;		
 	ChessPlayer* players[2];
 	// With the data which is stored in the cell we could decide if a player move is legal and execute it
-	ChessBoardCell chessBoard[BOARDROWS][BOARDCOLS];
+	ChessBoardCell chessBoard[BOARD_ROWS][BOARD_COLS];
 
 };
 

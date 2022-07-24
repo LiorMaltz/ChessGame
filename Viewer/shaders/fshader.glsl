@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 #define PI 3.141592654
 
@@ -46,6 +46,16 @@ uniform float MaxXCoord;
 // toon shading
 uniform bool useToonShading;
 uniform float numberOfLevels;
+
+// Chess Related
+uniform int mouseOnSquere;
+
+layout(std430, binding = 3) buffer ChessBoardBuffer {
+    int chessBoardBuffer[8][8];
+};
+
+//
+
 
 // final color to print
 out vec4 frag_color;
@@ -166,12 +176,23 @@ void main()
 		}
 
 		// textureColor get the color from the texture map that loaded to the app in 'finalUV' coordinate
-		vec3 textureColor = vec3(texture(textureMap, finalUV));
-		FinalColor = vec4(textureColor ,1.0f);
+		vec4 textureColor = vec4(texture(textureMap, finalUV));
+		FinalColor = vec4(textureColor);
 	}
 
-	//FinalColor = vec4(0,0,0,1);
-	frag_color = FinalColor;
+
+
+
+
+	if((chessBoardBuffer[int(fragTexCoords[0] * 8)][int(fragTexCoords[1] * 8)] == 1) && mouseOnSquere == 1)
+	{
+		frag_color = vec4(0,0,1,1.0f) * 0.2f + FinalColor * 0.8f;
+	}
+	else 
+	{
+		frag_color = FinalColor;
+	}
+
 	
 
 } 

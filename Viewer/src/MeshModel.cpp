@@ -65,7 +65,12 @@ MeshModel::MeshModel(std::vector<Face> faces, std::vector<glm::vec3> _vertices, 
 			int normalIndex = currentFace.GetNormalIndex(j) - 1;
 
 			vertices.push_back(_vertices[vertexIndex]);
-			normals.push_back(_normals[normalIndex]);
+
+			if (_normals.size() > 0)
+			{
+				normals.push_back(_normals[normalIndex]);
+			}
+			
 
 			if (_UVCoordinates.size() > 0)
 			{
@@ -431,17 +436,20 @@ glm::mat4 MeshModel::GetRotation() const
 // Assignment 1b.4 Local Rotation transformations
 void MeshModel::RotateObjectAxisX(const int& degree, const bool& localElseWorld)
 {
+	float deg = degree;
+	//deg = glm::radians(deg);
 	if (localElseWorld)
 	{
-		//localTransformation = MultiplyMatrix(localTransformation, RotationTransformation(degree, 'x'));
-		localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'x'));
+		localRotation = glm::rotate(localRotation, glm::radians(deg), glm::vec3(1.0f, 0.0f, 0.0f));
+		//localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'x'));
 		UpdateLocal();
 	}
 		
 	else
 	{
-		//worldRotation = MultiplyMatrix(RotationTransformation(degree, 'x'), worldRotation);
-		worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'x'));
+		worldRotation = glm::rotate(worldRotation, glm::radians(deg), glm::vec3(1.0f, 0.0f, 0.0f));
+		
+		//worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'x'));
 		UpdateWorld();
 	}
 		
@@ -450,17 +458,18 @@ void MeshModel::RotateObjectAxisX(const int& degree, const bool& localElseWorld)
 
 void MeshModel::RotateObjectAxisY(const int& degree, const bool& localElseWorld)
 {
+	float deg = degree;
 	if (localElseWorld)
 	{
-		//localTransformation = MultiplyMatrix(localTransformation, RotationTransformation(degree, 'y'));
-		localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'y'));
+		localRotation = glm::rotate(localRotation, glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
+		//localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'y'));
 		UpdateLocal();
 	}
 		
 	else
 	{
-		//worldRotation = MultiplyMatrix(RotationTransformation(degree, 'y'), worldRotation);
-		worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'y'));
+		localRotation = glm::rotate(localRotation, glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
+		//worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'y'));
 		UpdateWorld();
 	}
 		
@@ -469,17 +478,18 @@ void MeshModel::RotateObjectAxisY(const int& degree, const bool& localElseWorld)
 
 void MeshModel::RotateObjectAxisZ(const int& degree, const bool& localElseWorld)
 {
+	float deg = degree;
 	if (localElseWorld)
 	{
-		//localTransformation = MultiplyMatrix(localTransformation, RotationTransformation(degree, 'z'));
-		localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'z'));
+		localRotation = glm::rotate(localRotation, glm::radians(deg), glm::vec3(0, 0, 1));
+		//localRotation = MultiplyMatrix(localRotation, RotationTransformation(degree, 'z'));
 		UpdateLocal();
 	}
 		
 	else
 	{
-		//worldRotation = MultiplyMatrix(RotationTransformation(degree, 'z'), worldRotation);
-		worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'z'));
+		localRotation = glm::rotate(localRotation, glm::radians(deg), glm::vec3(0, 0, 1));
+		//worldRotation = MultiplyMatrix(worldRotation, RotationTransformation(degree, 'z'));
 		UpdateWorld();
 	}
 	//PrintMatrix(worldTransformation);
@@ -490,15 +500,15 @@ void MeshModel::TranslateObject(glm::vec3& moveVec, const bool& localElseWorld)
 {
 	if (localElseWorld)
 	{
-		//localTransformation = MultiplyMatrix(localTransformation, TranslatingTransformation(moveVec));
-		localTranslation = MultiplyMatrix(TranslatingTransformation(moveVec), localTranslation);
+		localTranslation = glm::translate(localTranslation, moveVec);
+		//localTranslation = MultiplyMatrix(TranslatingTransformation(moveVec), localTranslation);
 		UpdateLocal();
 	}
 		
 	else
 	{
-		worldTranslation = MultiplyMatrix(TranslatingTransformation(moveVec), worldTranslation);
-		//worldTransformation = MultiplyMatrix(worldTransformation, TranslatingTransformation(moveVec));
+		worldTranslation = glm::translate(worldTranslation, moveVec);
+		//worldTranslation = MultiplyMatrix(TranslatingTransformation(moveVec), worldTranslation);
 		UpdateWorld();
 	}
 		
@@ -510,14 +520,14 @@ void MeshModel::ScaleObject(glm::vec3& moveVec, const bool& localElseWorld)
 {
 	if (localElseWorld)
 	{
-		//localTransformation = MultiplyMatrix(localTransformation, ScalingTransformation(moveVec));
-		localScale = MultiplyMatrix(ScalingTransformation(moveVec), localScale);
+		localScale = glm::scale(localScale, moveVec);
+		//localScale = MultiplyMatrix(ScalingTransformation(moveVec), localScale);
 		UpdateLocal();
 	}
 	else
 	{
-		worldScale = MultiplyMatrix(ScalingTransformation(moveVec), worldScale);
-		//worldTransformation = MultiplyMatrix(worldTransformation, ScalingTransformation(moveVec));
+		worldScale = glm::scale(worldScale, moveVec);
+		//worldScale = MultiplyMatrix(ScalingTransformation(moveVec), worldScale);
 		UpdateWorld();
 	}
 		
@@ -526,14 +536,18 @@ void MeshModel::ScaleObject(glm::vec3& moveVec, const bool& localElseWorld)
 
 void MeshModel::UpdateLocal()
 {
-	localTransformation = MultiplyMatrix(MultiplyMatrix(localTranslation, localRotation), localScale);
+	//localTransformation = localScale * localTranslation * localRotation;
+	localTransformation = localTranslation * localRotation * localScale;
+	 
+	//localTransformation = MultiplyMatrix(MultiplyMatrix(localTranslation, localRotation), localScale);
 	UpdateRotation();
 }
 
 
 void MeshModel::UpdateWorld()
 {
-	worldTransformation = MultiplyMatrix(MultiplyMatrix(worldTranslation, worldRotation), worldScale);
+	worldTransformation = worldRotation * worldTranslation * worldScale;
+	//worldTransformation = MultiplyMatrix(MultiplyMatrix(worldTranslation, worldRotation), worldScale);
 	UpdateRotation();
 }
 
@@ -547,7 +561,7 @@ void MeshModel::buildTextureMap(char* atlasPath)
 {
 	textureMapHeight;
 	textureMapWidth;
-	channels = 3;
+	channels = 4;
 
 	textureMap = stbi_load(atlasPath, &textureMapWidth, &textureMapHeight, &channels, STBI_rgb_alpha);
 
@@ -660,7 +674,12 @@ void MeshModel::SetUseNormalMap()
 	useTextureAsNormalMap = !useTextureAsNormalMap;
 }
 
-
+void MeshModel::SetTransformation()
+{
+	worldRotation = worldScale = worldTranslation = localRotation = localScale = localTranslation = mat4(1.0f);
+	UpdateWorld();
+	UpdateLocal();
+}
 
 // assignment 3 adding
 

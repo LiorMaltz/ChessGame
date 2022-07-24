@@ -99,6 +99,8 @@ public:
 	void SetSpecularExponent(const float& newExp);
 	float GetSpecularExponent() const;
 
+	void SetTransformation();
+
 	glm::mat4 GetRotation() const;
 
 	// Assignment 1b.2 - Calculate min/max vertices, and set the localTransformation matrix accordingly

@@ -34,7 +34,7 @@ Scene::Scene(const float& windowwidth, const float& windowheight) :
 	levelsForToon = 3;
 }
 
-void Scene::AddModel(const std::shared_ptr<MeshModel>& mesh_model, int minWindowSize)
+void Scene::AddModel(const std::shared_ptr<MeshModel>& mesh_model)
 {
 	mesh_models.push_back(mesh_model);
 	// Assignment 1b.1

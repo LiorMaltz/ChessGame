@@ -2,25 +2,33 @@
 #define CHESS_PLAYER_CLASS_H
 #include<chrono>
 #include "stb_image.h"
+#include "MeshModel.h"
 
 using namespace std::chrono;
 
 #define NUM_OF_PIECES 16
 
-enum PieceType { KingType, QueenType, RookType, HorseType, BishopType, PawnType, DefaultType };
+enum class PieceType { KingType, QueenType, RookType, HorseType, BishopType, PawnType, DefaultType };
+
 
 // Making abstact class for all the chess pieces
 class Piece
 {
 public:
-	unsigned char* pieceImage;
+	char* pieceImage;
 	PieceType pieceType;
-	bool whiteElseBlack;
-	int loacationOnBoard[2];
-	Piece(bool whiteElseBlack);
-	PieceType getPieceType() const;
+	bool blackElseWhite;
+	int id;
+	int locationOnBoard[2];
 
-	void virtual InsertImage() = 0;
+	MeshModel* model;
+	Piece(const bool& blackElseWhite, const int& id);
+	PieceType GetPieceType() const;
+	int GetID() const;
+	void SetModel(MeshModel* model);
+	void SetLocation(const int* loc);
+	virtual void InsertImage() = 0;
+	virtual void InitializeModelPlace(const float& stepDist, const float& scale) = 0;
 	virtual ~Piece();
 private:
 
@@ -31,8 +39,9 @@ private:
 class Pawn : public Piece
 {
 public:
-	Pawn(bool whiteElseBlack);
+	Pawn(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	virtual void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
@@ -40,16 +49,18 @@ public:
 class Rook : public Piece
 {
 public:
-	Rook::Rook(bool whiteElseBlack);
+	Rook::Rook(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
 class Horse : public Piece
 {
 public:
-	Horse::Horse(bool whiteElseBlack);
+	Horse::Horse(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
@@ -57,8 +68,9 @@ public:
 class Bishop : public Piece
 {
 public:
-	Bishop::Bishop(bool whiteElseBlack);
+	Bishop::Bishop(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
@@ -66,16 +78,18 @@ public:
 class King : public Piece
 {
 public:
-	King::King(bool whiteElseBlack);
+	King::King(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
 class Queen : public Piece
 {
 public:
-	Queen::Queen(bool whiteElseBlack);
+	Queen::Queen(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
+	void InitializeModelPlace(const float& stepDist, const float& scale);
 };
 
 
@@ -85,14 +99,14 @@ class ChessPlayer
 {
 public:
 	bool kingInThreat;
-	bool whiteElseBlack;
+	bool blackElseWhite;
 	milliseconds timer;
 	Piece* pieces[16];
 
-	ChessPlayer(int time, bool whiteElseBlack);
+	ChessPlayer(const int& time, const bool& blackElseWhite);
 	~ChessPlayer();
 
-	bool GetKingInsThreat() const;
+	bool GetKingInThreat() const;
 
 private:
 

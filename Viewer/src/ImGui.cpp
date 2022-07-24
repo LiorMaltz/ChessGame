@@ -15,7 +15,7 @@ vector<bool> DrawNormalFace = { false };
 vector<bool> DrawNormalVertex = { false };
 vector<bool> DrawModelAxis = { false };
 vector<bool> DrawModelFrameAxis = { false };
-vector<bool> UseTexture = { false };
+vector<bool> UseTexture = { };
 vector<bool> UseTextureAsNormalMap;
 vector<int> textureType;
 vector<float> textureRadius;
@@ -96,8 +96,39 @@ bool InitializeWindows[5] = { true };
 int highFace = -1;
 int lowFace = -1;
 
+// Add model not through imgui
+void AddModel(nfdchar_t* outPath, Scene& scene, nfdchar_t* texturePath)
+{
+	// Add model to scene
+	scene.AddModel(Utils::LoadMeshModel(outPath));
+	//	Initialize the GUI's rotation vectors for each loaded model
+	modelLocalRotation.push_back({ 0,0,0 });
+	modelWorldRotation.push_back({ 0,0,0 });
+	DrawWorldFrameAxis.push_back(false);
+	DrawModelAxis.push_back(false);
+	DrawBoundingBox.push_back(false);
+	DrawNormalFace.push_back(false);
+	DrawNormalVertex.push_back(false);
+	DrawModelFrameAxis.push_back(false);
+	
+	textureType.push_back(1);
+	textureRadius.push_back(1);
+	UseTextureAsNormalMap.push_back(false);
 
-void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
+	if (texturePath != NULL)
+	{
+		scene.GetModel(scene.GetModelCount() - 1).buildTextureMap(texturePath);
+		UseTexture.push_back(true);
+	}
+	else
+	{
+		UseTexture.push_back(false);
+	}
+
+}
+
+
+void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window)
 {
 	// Get current window's screenWidth and screenHeight for scaling purposes
 	glfwGetWindowSize(window, &screenWidth, &screenHeight);
@@ -114,7 +145,8 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
 	
 
 	// ImGui begins, maybe we should make use of this mandatory window? That, or remove it.
-	ImGui::Begin("MeshViewer Menu");
+	//ImGui::Begin("MeshViewer Menu");
+	//ImGui::Begin("");
 
 	// Menu Bar
 	if (ImGui::BeginMainMenuBar())
@@ -129,7 +161,7 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
 				if (result == NFD_OKAY)
 				{
 					// Add model to scene
-					scene.AddModel(Utils::LoadMeshModel(outPath), std::min(screenWidth,screenHeight));
+					scene.AddModel(Utils::LoadMeshModel(outPath));
 					//	Initialize the GUI's rotation vectors for each loaded model
 					modelLocalRotation.push_back({ 0,0,0 });
 					modelWorldRotation.push_back({ 0,0,0 });
@@ -147,7 +179,7 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
 					free(outPath);
 
 					
-					// Note: Opening and closing the 'open file' dialog box creates a memory leak, apparently
+					// Note: Opening and closing the 'open file' dialog box creates a memory leak
 				}
 				else if (result == NFD_CANCEL)
 				{
@@ -1289,10 +1321,10 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
 
 				ImGui::Text("Draw as wireframe: "); ImGui::SameLine();
 				ImGui::Checkbox("##drawOutlines", &drawOutlines);
-				if (drawOutlinesTemp != drawOutlines)
-				{
-					renderer.setFillOrLine();
-				}
+				//if (drawOutlinesTemp != drawOutlines)
+				//{
+				//	renderer.setFillOrLine();
+				//}
 
 				ImGui::Text("Fill Face mode: "); ImGui::SameLine();
 				ImGui::Text("No fill"); ImGui::SameLine();
@@ -1586,7 +1618,8 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window, Renderer& renderer)
 		ImGui::End();
 	}
 
-	ImGui::End();
+	//ImGui::End();
+	//addImGui::End();
 }
 
 // Setup function for model lists in the GUI
