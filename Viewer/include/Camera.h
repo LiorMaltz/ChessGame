@@ -20,6 +20,7 @@ public:
 	//
 	glm::mat4 GetRotationMatrix() const;
 	glm::mat4 GetInverse() const;
+	glm::mat4 Camera::GetVeiw() const;
 	// Transformation functions
 	void RotateCameraAxisX(const int& degree);
 	void RotateCameraAxisY(const int& degree);

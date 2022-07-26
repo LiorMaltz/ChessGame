@@ -71,7 +71,7 @@ void Piece::SetLocation(const int* loc)
 
 
 
-Pawn::Pawn(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id)
+Pawn::Pawn(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id) , firstMoove(true)
 {
 	pieceType = PieceType::PawnType;
 	InsertImage();
@@ -233,11 +233,11 @@ void Bishop::InitializeModelPlace(const float& stepDist, const float& scale)
 		yPar = 1;
 	if (id == 4)
 	{
-		model->TranslateObject(vec3(stepDist * -1 - (stepDist / 2), (stepDist * 3.0f + (stepDist / 2)) * yPar + 0.001f, -0.1), true);
+		model->TranslateObject(vec3(stepDist * - 1 - (stepDist / 2), (stepDist * 3.0f + (stepDist / 2)) * yPar + 0.001f, -0.1), true);
 	}
 	else
 	{
-		model->TranslateObject(vec3(stepDist * +1 + (stepDist / 2), (stepDist * 3.0f + (stepDist / 2)) * yPar + 0.001f, -0.1), true);
+		model->TranslateObject(vec3(stepDist * 1 + (stepDist / 2), (stepDist * 3.0f + (stepDist / 2)) * yPar + 0.001f, -0.1), true);
 	}
 }
 

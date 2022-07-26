@@ -2,6 +2,9 @@
 #define CHESS_MATCH_CLASS_H
 
 #include"ChessPlayer.h"
+#include <stack>
+#include <array>
+
 
 
 #define BOARD_ROWS 8
@@ -17,6 +20,18 @@ struct ChessBoardCell
 
 	ChessBoardCell() : blackElseWhiteIsOn(false), cellIsOccupied(false), piece(NULL) {}
 };
+
+
+// type that will be usable for coloring the table
+struct TableColorType {
+	int data[8][8] = { 0 };
+	std::array<int, 2> currentSquere = { -1, -1 };
+	std::array<int, 2> ClickedSquere = { -1, -1 };
+	std::stack<std::array<int, 2>> MoveToSqueresFromClicked;
+	bool change = false;
+	bool clicked = false;
+};
+
 
 class ChessMatch
 {
@@ -36,15 +51,24 @@ public:
 	int MateOrDraw();
 	// true - check on king. false - no check
 	bool CheckKingThreat();
+	void ConstructChessBoardBuffer();
 
 	ChessPlayer* GetPlayer(const int& num);
+	TableColorType* GetTableColorType();
 
+	// Graphic variables
+	TableColorType chessBoardColorData;
+	GLuint tableColorBuffer;
+	GLuint tableColorBindingPlace;
+	float stepDistOnForSquere = 0.125028f;
 private:
 	// False is white turn, true is black
 	Turn turn;		
 	ChessPlayer* players[2];
 	// With the data which is stored in the cell we could decide if a player move is legal and execute it
 	ChessBoardCell chessBoard[BOARD_ROWS][BOARD_COLS];
+
+
 
 };
 

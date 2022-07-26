@@ -1,5 +1,5 @@
 #pragma once
-
+#include<iostream>
 #include <glm/glm.hpp>
 
 using namespace glm;
@@ -42,4 +42,14 @@ void PrintMatrix(T mat)
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+}
+
+template<typename T>
+void PrintVector(T vec)
+{
+	for (int i = 0; i < vec.length(); i++)
+	{
+		std::cout << vec[i] << " " << std::endl;
+	}
+	
 }

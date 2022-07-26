@@ -29,6 +29,7 @@ void main()
 {
 	// This gave us some projection issues, so we tried transposing it
 	//gl_Position = projection * (vec4(pos, 1.0f) * model * view);
+	//gl_Position = projection * view * model * vec4(pos.x, pos.y, pos.z, 1.0f);
 	gl_Position = projection * view * model * vec4(pos, 1.0f);
 	//gl_Position = model * vec4(pos, 1.0f);
 	fragPos = vec3(vec4(pos, 1.0f) * model);

@@ -1,7 +1,9 @@
 #pragma once
-#include "Scene.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+
+#include "Scene.h"
+#include "ChessMatch.h"
 
 // Lazy stuff
 struct terrain_data {
@@ -10,7 +12,7 @@ struct terrain_data {
 	bool change = false;
 };
 
-extern terrain_data chessBoardBuffer;
+extern terrain_data chessBoardColorData;
 
 //
 
@@ -19,7 +21,7 @@ class Renderer
 public:
 	Renderer();
 	virtual ~Renderer();
-	void Render(const Scene& scene, const glm::vec3& clear_color);
+	void Render(const Scene& scene, const glm::vec3& clear_color, ChessMatch* chessMatch);
 	void Renderer::InitOpenglRendering();
 
 	void EnvironmentMapping(const Scene& scene);

@@ -118,53 +118,6 @@ MeshModel::MeshModel(std::vector<Face> faces, std::vector<glm::vec3> _vertices, 
 	glBindVertexArray(0);
 
 
-	// we used the reference code at the beginning 
-	////	building vector of the model vertices. refernce-copy
-	//modelVertices.reserve(3 * faces.size());
-	//for (int i = 0; i < faces.size(); i++)
-	//{
-	//	Face currentFace = faces.at(i);
-	//	for (int j = 0; j < 3; j++)
-	//	{
-	//		Vertex vertex;
-	//		int vertexIndex = currentFace.GetVertexIndex(j) - 1;
-	//		int normalIndex = currentFace.GetNormalIndex(j) - 1;
-
-	//		vertex.position = vertices[vertexIndex];
-	//		vertex.normal = normals[normalIndex];
-
-	//		if (UVCoordinates.size() > 0)
-	//		{
-	//			int textureCoordsIndex = currentFace.GetTextureIndex(j) - 1;
-	//			vertex.textureCoords = UVCoordinates[textureCoordsIndex];
-	//		}
-	//		modelVertices.push_back(vertex);
-	//	}
-	//}
-
-	//// binding model stracture to the VAO of the model in form of vertieces that each one have his position, normal and UV.
-	//glGenVertexArrays(1, &vao);
-	//glGenBuffers(1, &vbo);
-
-	//glBindVertexArray(vao);
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	//glBufferData(GL_ARRAY_BUFFER, modelVertices.size() * sizeof(Vertex), &modelVertices[0], GL_STATIC_DRAW);
-
-	//// Vertex Positions
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-	//glEnableVertexAttribArray(0);
-
-	//// Normals attribute
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(3 * sizeof(GLfloat)));
-	//glEnableVertexAttribArray(1);
-
-	//// Vertex Texture Coords
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(6 * sizeof(GLfloat)));
-	//glEnableVertexAttribArray(2);
-
-	//// unbind to make sure other code does not change it somewhere else
-	//glBindVertexArray(0);
-
 }
 
 MeshModel::~MeshModel()
@@ -389,26 +342,6 @@ void MeshModel::ScaleToWindow(const float& windowSize)
 	///
 
 
-	//localTransformation = glm::mat4(1.0f);
-
-	//float minCoordinateVal = vertices[0][0];
-	//float maxCoordinateVal = vertices[0][0];
-	//for (int i = 0; i < vertices.size(); i++)
-	//{
-	//	for (int j = 0; j < 3; j++)
-	//	{
-	//		minCoordinateVal = std::min(minCoordinateVal, vertices[i][j]);
-	//		maxCoordinateVal = std::max(maxCoordinateVal, vertices[i][j]);
-	//	}
-	//}
-
-	//float scale = 0.75 * (windowSize / (maxCoordinateVal - minCoordinateVal));
-	//glm::vec3 vec = { scale, scale, scale };
-	//ScaleObject(vec, true);
-	//vec = { -minCoordinateVal, -minCoordinateVal, -minCoordinateVal };
-	//TranslateObject(vec, true);
-	//
-	////PrintMatrix(localTransformation);
 }
 
 // Assignment 1b.3
@@ -498,6 +431,7 @@ void MeshModel::RotateObjectAxisZ(const int& degree, const bool& localElseWorld)
 // Assignment 1b.4 Local Translation transformation, and of note: The multiplication is supposedly in the wrong order, but what it gives is uniform translation regardless of model size. Some wicked math stuff going on in here.
 void MeshModel::TranslateObject(glm::vec3& moveVec, const bool& localElseWorld)
 {
+	//moveVec.x = -moveVec.x;
 	if (localElseWorld)
 	{
 		localTranslation = glm::translate(localTranslation, moveVec);
@@ -573,7 +507,7 @@ void MeshModel::buildTextureMap(char* atlasPath)
 	{
 
 		// image 'rotation' in 180 degrees - reference inspiration
-		int widthInBytes = textureMapWidth * 4;
+		int widthInBytes = textureMapWidth * channels;
 		unsigned char temp;
 		int halfHeight = textureMapHeight / 2;
 		for (int row = 0; row < halfHeight; row++)
@@ -585,6 +519,22 @@ void MeshModel::buildTextureMap(char* atlasPath)
 				textureMap[(textureMapHeight - row - 1) * widthInBytes + col] = temp;
 			}
 		}
+
+		for (int row = 0; row < textureMapHeight; row++)
+		{
+			for (int col = 0; col < textureMapWidth / 2; col++)
+			{
+				for (int c = 0; c < channels; c++)
+				{
+					temp = textureMap[row * widthInBytes + col * channels + c];
+					textureMap[row * widthInBytes + col * channels + c] = textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c];
+					textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c] = temp;
+				}
+
+			}
+		}
+
+
 
 		// building texture to model
 		glGenTextures(1, &modelTexture);
@@ -674,11 +624,18 @@ void MeshModel::SetUseNormalMap()
 	useTextureAsNormalMap = !useTextureAsNormalMap;
 }
 
-void MeshModel::SetTransformation()
+void MeshModel::ResetTransformation()
 {
 	worldRotation = worldScale = worldTranslation = localRotation = localScale = localTranslation = mat4(1.0f);
 	UpdateWorld();
 	UpdateLocal();
+}
+
+void MeshModel::SetWorldLocation(const vec3& setter)
+{
+	worldTranslation = glm::mat4(1);
+	worldTranslation = glm::translate(worldTranslation, setter);
+	UpdateWorld();
 }
 
 // assignment 3 adding

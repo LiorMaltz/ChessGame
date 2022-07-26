@@ -14,21 +14,21 @@
 
 // Lazy stuff
 
-terrain_data chessBoardBuffer;
-GLuint ssbo;
-GLuint binding;
+terrain_data chessBoardColorData;
+GLuint tableColorBuffer;
+GLuint tableColorBindingPlace;
 
 
 void costructChessBoardBuffer()
 {
-	//chessBoardBuffer.data[1][1] = 1;
-	GLuint ssbo;
-	GLuint binding = 3;//Should be equal to the binding specified in the shader code
-	glGenBuffers(1, &ssbo);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 8 * 8, chessBoardBuffer.data, GL_STATIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssbo);
-	chessBoardBuffer.change = false;
+	tableColorBuffer;
+	tableColorBindingPlace = 3;
+	glGenBuffers(1, &tableColorBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, tableColorBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 8 * 8, chessBoardColorData.data, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, tableColorBindingPlace, tableColorBuffer);
+	chessBoardColorData.change = false;
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 
@@ -88,7 +88,7 @@ void Renderer::EnvironmentMapping(const Scene& scene)
 }
 
 
-void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
+void Renderer::Render(const Scene& scene, const glm::vec3& clear_color, ChessMatch* chessMatch)
 {
 
 	int cameraCount = scene.GetCameraCount();
@@ -105,7 +105,9 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 		for (int currentModelIndex = 0; currentModelIndex < modelCount; currentModelIndex++)
 		{
 			MeshModel currentModel = scene.GetModel(currentModelIndex);
-			
+
+
+
 			// get model's matrix
 			//glm::mat4 modelTransformation = MultiplyMatrix(currentModel.GetWorldTransformation(), currentModel.GetLocalTransformation());
 			glm::mat4 modelTransformation = currentModel.GetWorldTransformation() * currentModel.GetLocalTransformation();
@@ -113,7 +115,10 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 			
 			// Set the uniform variables
 			//GLint ptr = glGetUniformLocation(program, "model");
-			glUniformMatrix4fv(glGetUniformLocation(program, "model"),1, GL_FALSE, &(modelTransformation[0].x));
+			glm::mat4 invertexXmodel = modelTransformation;
+			invertexXmodel[3][0] = -invertexXmodel[3][0];
+			glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &(invertexXmodel[0].x));
+			//glUniformMatrix4fv(glGetUniformLocation(program, "model"),1, GL_FALSE, &(modelTransformation[0].x));
 			glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &(cameraInverse[0].x));
 			glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &(projection[0].x));
 
@@ -140,7 +145,7 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 				glUniform1f(glGetUniformLocation(program, "MaxYCoord"), maxCoords.y);
 				glUniform1f(glGetUniformLocation(program, "MinYCoord"), minCoords.y);
 
-				// binding model//environment texture
+				// model/environment texture
 				glUniform1i(glGetUniformLocation(program, "textureMap"), 0);
 				glUniform1i(glGetUniformLocation(program, "skybox"), 0);
 			}
@@ -211,25 +216,26 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color)
 			}
 
 
-			if (chessBoardBuffer.change)
+			if (chessMatch->GetTableColorType()->change == true)
 			{
- 				costructChessBoardBuffer();
+				chessMatch->ConstructChessBoardBuffer();
+				chessMatch->GetTableColorType()->change = false;
 			}
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 3);
+			
 			glUniform1i(glGetUniformLocation(program, "mouseOnSquere"), transperantVal);
 
-			//....
+			//
 
 			
-			//if (MouseOnSquere || currentModelIndex != 33)
-			//{
-			//}
-
+			// Binding buffers
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, chessMatch->tableColorBindingPlace);
 			glBindVertexArray(currentModel.GetVAO());
-			glDrawArrays(GL_TRIANGLES, 0, currentModel.GetModelSize());
-			glBindVertexArray(0);
 
-			// unbind texture
+			glDrawArrays(GL_TRIANGLES, 0, currentModel.GetModelSize());
+			
+			// unbinding
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			glBindVertexArray(0);			
 			glBindTexture(GL_TEXTURE_2D, 0);
 
 

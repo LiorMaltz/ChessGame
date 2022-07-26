@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
 
-
+//#include <chrono>
 #include <cmath>
 #include <stdio.h>
 #include <glad/glad.h>
@@ -8,7 +8,7 @@
 
 #include "ImGui.h"
 
-#include "ChessMatch.h"
+//#include "ChessMatch.h"
 
 
 /**
@@ -33,13 +33,13 @@ static void GlfwErrorCallback(int error, const char* description);
 GLFWwindow* SetupGlfwWindow(int w, int h, const char* window_name);
 ImGuiIO& SetupDearImgui(GLFWwindow* window);
 void StartFrame();
-void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io);
+void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io, ChessMatch* chessMatch);
 void Cleanup(GLFWwindow* window);
 // This default Imgui draw function has been superseded
 //void DrawImguiMenus(ImGuiIO& io, Scene& scene);
 
 // Another Function declarations
-void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer& renderer);
+void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer& renderer, ChessMatch* chessMatch);
 ChessMatch* StartChessGame(const int& time, Scene& scene);
 void EndChessGame(ChessMatch* chessMatch);
 void InitializeChessModels(Scene& scene, ChessMatch* chessMatch);
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
 
 
 		MyImGui(io, scene, window);
-		KeyBoardMouseEvents(scene, window, io,renderer);
-		RenderFrame(window, scene, renderer, io);
+		KeyBoardMouseEvents(scene, window, io, renderer, chessMatch);
+		RenderFrame(window, scene, renderer, io, chessMatch);
     }
 
 	EndChessGame(chessMatch);
@@ -155,7 +155,7 @@ void StartFrame()
 	ImGui::NewFrame();
 }
 
-void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io)
+void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io, ChessMatch* chessMatch)
 {
 	ImGui::Render();
 	int frameBufferWidth, frameBufferHeight;
@@ -163,24 +163,7 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 	glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 	
 
-	if (!io.WantCaptureKeyboard)
-	{
-		// TODO: Handle keyboard events here
-		if (io.KeysDown[65])
-		{
-			// A key is down
-			// Use the ASCII table for more key codes (https://www.asciitable.com/)
-		}
-	}
-
-	if (!io.WantCaptureMouse)
-	{
-		// TODO: Handle mouse events here
-		if (io.MouseDown[0])
-		{
-			// Left mouse button is down
-		}
-	}
+	
 
 	// if fog affect in the scene is on the background will change to the color of the fog.
 	/*if (scene.GetFogEffect())
@@ -198,7 +181,7 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 	// Clear the screen and depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	renderer.Render(scene,clear_color);
+	renderer.Render(scene, clear_color, chessMatch);
 
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -216,9 +199,10 @@ void Cleanup(GLFWwindow* window)
 	glfwTerminate();
 }
 
+//chrono::milliseconds myTimer;
 
 // Custom function to handle keyboard presses and Mouse dragging
-void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer& renderer)
+void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer& renderer, ChessMatch* chessMatch)
 {
 	// for camera
 	
@@ -233,7 +217,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { 0,keySpeed* scale,0 };
+		glm::vec3 keyboardMoveVec = { 0,keySpeed * scale,0 };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -244,7 +228,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { 0,-keySpeed* scale,0 };
+		glm::vec3 keyboardMoveVec = { 0,-keySpeed * scale,0 };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -255,7 +239,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { -keySpeed* scale,0,0 };
+		glm::vec3 keyboardMoveVec = { -keySpeed * scale, 0, 0 };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -266,7 +250,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { keySpeed* scale,0,0 };
+		glm::vec3 keyboardMoveVec = { keySpeed * scale, 0, 0 };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -277,7 +261,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { 0,0,-keySpeed * scale };
+		glm::vec3 keyboardMoveVec = { 0, 0, keySpeed * scale };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -288,7 +272,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		{
 			scale *= 20;
 		}
-		glm::vec3 keyboardMoveVec = { 0,0,keySpeed * scale };
+		glm::vec3 keyboardMoveVec = { 0, 0, -keySpeed * scale };
 		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
@@ -325,12 +309,11 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 		}
 		MousePosVec = io.MousePos;
 	}
-	else if (io.MouseClicked[0] && renderer.MouseOnSquere)
-	{
-		
-
-		MousePosVec = io.MousePos;
-	}
+	//else if (io.MouseClicked[0] && renderer.MouseOnSquere)
+	//{
+	//	c
+	//	MousePosVec = io.MousePos;
+	//}
 
 	else
 		MousePosVec = io.MousePos;
@@ -340,20 +323,106 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 	ImVec2 MouseC = io.MousePos;
 	if (MouseC[0] >= 710.0f && MouseC[0] <= 1210.0f && MouseC[1] >= 275.0f && MouseC[1] <= 775.0f)
 	{
+		bool validation = false;
 		renderer.MouseOnSquere = true;
+		TableColorType& chessBoardColorRef = *(chessMatch->GetTableColorType());
+
+		// If the crusor on a table squere we will assign them
 		ImVec2 squeres = { (MouseC[0] - 710.0f) / (1210.0f - 710.0f) , (MouseC[1] - 275.0f) / (775.0f - 275.0f) };
-		renderer.xSquere = squeres[0] * 8.0f;
-		renderer.ySquere = squeres[1] * 8.0f;
-		renderer.xSquere = abs(renderer.xSquere - 7);
+		if (squeres[0] * 8.0f >= 0 && squeres[0] * 8.0f < 8)
+		{
+			renderer.xSquere = squeres[0] * 8.0f;
+			validation = true;
+		}
+		if (squeres[1] * 8.0f >= 0 && squeres[1] * 8.0f < 8 && validation)
+		{
+			renderer.ySquere = squeres[1] * 8.0f;
+		}
+		else
+		{
+			validation = false;
+		}
 		renderer.ySquere = abs(renderer.ySquere - 7);
 
-		chessBoardBuffer.data[chessBoardBuffer.lastSquere[0]][chessBoardBuffer.lastSquere[1]] = 0;
-		chessBoardBuffer.lastSquere[0] = renderer.xSquere;
-		chessBoardBuffer.lastSquere[1] = renderer.ySquere;
+		// if we moved to other squere we will replace the pointed squere
+		if ((renderer.xSquere != chessBoardColorRef.currentSquere[0] || renderer.ySquere != chessBoardColorRef.currentSquere[1]) && validation)
+		{
+			// update current the cursor pointed squere
+			// zero the later squere only if the player can't move to there
+			int clickedSquere[2] = {chessBoardColorRef.ClickedSquere[0], chessBoardColorRef.ClickedSquere[1]};
+			if (!(chessBoardColorRef.clicked && chessMatch->TestMove(clickedSquere , &chessBoardColorRef.currentSquere[0])))
+			{
+				chessBoardColorRef.data[chessBoardColorRef.currentSquere[0]][chessBoardColorRef.currentSquere[1]] = 0;
+			}			
+			chessBoardColorRef.currentSquere[0] = renderer.xSquere;
+			chessBoardColorRef.currentSquere[1] = renderer.ySquere;
+			chessBoardColorRef.data[chessBoardColorRef.currentSquere[0]][chessBoardColorRef.currentSquere[1]] = 1;
+			chessBoardColorRef.change = true;
+		}
 
-		chessBoardBuffer.data[renderer.xSquere][renderer.ySquere] = 1;
-		chessBoardBuffer.change = true;
-		//MoveTransperantWindow(scene, renderer.xSquere, renderer.ySquere);
+		// If Clicked squere was changed, reset the colored movable squeres
+		if ((chessBoardColorRef.ClickedSquere[0] != renderer.xSquere || chessBoardColorRef.ClickedSquere[1] != renderer.ySquere ) && io.MouseClicked[0] == 1)
+		{
+			bool moveWasMade = false;
+			// zeroing outgoing squeres
+			while (!chessBoardColorRef.MoveToSqueresFromClicked.empty())
+			{
+				int outgoingSquere[2] = { chessBoardColorRef.MoveToSqueresFromClicked.top()[0], chessBoardColorRef.MoveToSqueresFromClicked.top()[1] };
+				chessBoardColorRef.MoveToSqueresFromClicked.pop();
+				// zero the squere only if the cursor is not pointing on him
+				if (outgoingSquere[0] != renderer.xSquere || outgoingSquere[1] != renderer.ySquere)
+				{
+					chessBoardColorRef.data[outgoingSquere[0]][outgoingSquere[1]] = 0;
+				}
+			}
+
+			// check if a clicked squere was saved and if so check to make a move from there the the new clicked sqeure
+			if (chessBoardColorRef.ClickedSquere[0] != -1 && chessBoardColorRef.ClickedSquere[1] != -1 && chessBoardColorRef.clicked)
+			{
+				int from[2] = { chessBoardColorRef.ClickedSquere[0], chessBoardColorRef.ClickedSquere[1] };
+				int toSquere[2] = { renderer.xSquere, renderer.ySquere };
+				if (chessMatch->TestMove(from, toSquere))
+				{
+					chessMatch->MakeMove(from, toSquere);
+
+					// reset tabel color buffer
+					
+					// reset clicked color
+					chessBoardColorRef.data[chessBoardColorRef.ClickedSquere[0]][chessBoardColorRef.ClickedSquere[1]] = 0;
+					chessBoardColorRef.ClickedSquere[0] = -1;
+					chessBoardColorRef.ClickedSquere[1] = -1;
+					moveWasMade = true;
+				}
+				chessBoardColorRef.clicked = false;
+			}
+			if(!moveWasMade)
+			{
+
+				chessBoardColorRef.ClickedSquere[0] = renderer.xSquere;
+				chessBoardColorRef.ClickedSquere[1] = renderer.ySquere;
+
+				// Inserting every possible squere the player can move to
+				int currentSquere[2] = { chessBoardColorRef.ClickedSquere[0], chessBoardColorRef.ClickedSquere[1] };
+				for (int i = 0; i < BOARD_ROWS; i++)
+				{
+					for (int j = 0; j < BOARD_COLS; j++)
+					{
+						int toSquere[2] = { i, j };
+						if (chessMatch->TestMove(currentSquere, toSquere))
+						{
+							std::array<int, 2> toSquere = { i,j };
+							chessBoardColorRef.MoveToSqueresFromClicked.push(toSquere);
+							chessBoardColorRef.data[toSquere[0]][toSquere[1]] = 1;
+
+						}
+					}
+				}
+				chessBoardColorRef.clicked = true;
+			}
+
+			chessBoardColorRef.change = true;
+		}
+
 	}
 	else
 	{
@@ -402,7 +471,7 @@ void EndChessGame(ChessMatch* chessMatch)
 
 void MoveTransperantWindow(Scene& scene, float xSquere, float ySquere)
 {
-	scene.GetModel(33).SetTransformation();
+	scene.GetModel(33).ResetTransformation();
 	scene.GetModel(33).ScaleObject(vec3(0.125f), true);
 	xSquere -= 3.5; ySquere -= 3.5;
 	scene.GetModel(33).TranslateObject(vec3(0, 0, -1.05), true);

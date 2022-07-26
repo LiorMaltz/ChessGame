@@ -977,6 +977,11 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window)
 		ImGui::Text("Camera transformation :\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f", mat[0][0], mat[0][1], mat[0][2], mat[0][3],
 			mat[1][0], mat[1][1], mat[1][2], mat[1][3], mat[2][0], mat[2][1], mat[2][2], mat[2][3], mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
 
+		//mat = mat4(vec4(1, 2, 3, 4),vec4(5, 6, 7, 8), vec4(9, 10, 11, 12), vec4(13, 14, 15, 16));
+		//
+		//ImGui::Text("Camera transformation :\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f", mat[0][0], mat[0][1], mat[0][2], mat[0][3],
+		//	mat[1][0], mat[1][1], mat[1][2], mat[1][3], mat[2][0], mat[2][1], mat[2][2], mat[2][3], mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
+
 		mat = scene.GetActiveCamera().GetProjectionTransformation();
 		ImGui::Text("Camera Projection :\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f\n%f		%f		%f		%f", mat[0][0], mat[0][1], mat[0][2], mat[0][3],
 			mat[1][0], mat[1][1], mat[1][2], mat[1][3], mat[2][0], mat[2][1], mat[2][2], mat[2][3], mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
@@ -1015,14 +1020,14 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window)
 
 				
 				
-				// inverse * world * local * vector 
-				firstVec = MultiplyVectorMatrix(scene.GetActiveCamera().GetInverse(), firstVec);
-
-				ImGui::Text("FirstVetex in camera view :\n%f		%f		%f", firstVec.x, firstVec.y, firstVec.z);
-				
-				// projection * inverse * world * local * vector 
-				firstVec = MultiplyVectorMatrix(scene.GetActiveCamera().GetProjectionTransformation(), firstVec);
-				ImGui::Text("FirstVetex with projection :\n%f		%f		%f", firstVec.x, firstVec.y, firstVec.z);
+				//// inverse * world * local * vector 
+				//firstVec = MultiplyVectorMatrix(scene.GetActiveCamera().GetVeiw(), firstVec);
+				//
+				//ImGui::Text("FirstVetex in camera view :\n%f		%f		%f", firstVec.x, firstVec.y, firstVec.z);
+				//
+				//// projection * inverse * world * local * vector 
+				//firstVec = MultiplyVectorMatrix(scene.GetActiveCamera().GetProjectionTransformation(), firstVec);
+				//ImGui::Text("FirstVetex with projection :\n%f		%f		%f", firstVec.x, firstVec.y, firstVec.z);
 			}
 			if (scene.GetLightCount())
 			{
@@ -1032,6 +1037,8 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window)
 				ImGui::Text("firstLightPos in camera view :\n%f		%f		%f", firstLightPos.x, firstLightPos.y, firstLightPos.z);
 			}
 
+			ImGui::Text("Mouse position is x:%d , y:%d", (int)io.MousePos.x, (int)io.MousePos.y);
+			
 
 
 		}

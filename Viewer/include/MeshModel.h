@@ -99,7 +99,9 @@ public:
 	void SetSpecularExponent(const float& newExp);
 	float GetSpecularExponent() const;
 
-	void SetTransformation();
+	void ResetTransformation();
+
+	void SetWorldLocation(const vec3& setter);
 
 	glm::mat4 GetRotation() const;
 

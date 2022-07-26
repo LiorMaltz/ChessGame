@@ -20,6 +20,7 @@ public:
 	bool blackElseWhite;
 	int id;
 	int locationOnBoard[2];
+	
 
 	MeshModel* model;
 	Piece(const bool& blackElseWhite, const int& id);
@@ -42,6 +43,7 @@ public:
 	Pawn(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
 	virtual void InitializeModelPlace(const float& stepDist, const float& scale);
+	bool firstMoove;
 };
 
 

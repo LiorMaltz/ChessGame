@@ -184,7 +184,7 @@ void main()
 
 
 
-	if((chessBoardBuffer[int(fragTexCoords[0] * 8)][int(fragTexCoords[1] * 8)] == 1) && mouseOnSquere == 1)
+	if((chessBoardBuffer[int((1 - fragTexCoords[0]) * 8)][int(fragTexCoords[1] * 8)] == 1) && mouseOnSquere == 1)
 	{
 		frag_color = vec4(0,0,1,1.0f) * 0.2f + FinalColor * 0.8f;
 	}
