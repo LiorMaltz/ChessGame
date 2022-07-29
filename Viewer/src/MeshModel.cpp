@@ -520,19 +520,21 @@ void MeshModel::buildTextureMap(char* atlasPath)
 			}
 		}
 
-		for (int row = 0; row < textureMapHeight; row++)
-		{
-			for (int col = 0; col < textureMapWidth / 2; col++)
-			{
-				for (int c = 0; c < channels; c++)
-				{
-					temp = textureMap[row * widthInBytes + col * channels + c];
-					textureMap[row * widthInBytes + col * channels + c] = textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c];
-					textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c] = temp;
-				}
 
-			}
-		}
+		// Inverting the image by the x axis
+		//for (int row = 0; row < textureMapHeight; row++)
+		//{
+		//	for (int col = 0; col < textureMapWidth / 2; col++)
+		//	{
+		//		for (int c = 0; c < channels; c++)
+		//		{
+		//			temp = textureMap[row * widthInBytes + col * channels + c];
+		//			textureMap[row * widthInBytes + col * channels + c] = textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c];
+		//			textureMap[row * widthInBytes + (textureMapWidth - col - 1) * channels + c] = temp;
+		//		}
+		//
+		//	}
+		//}
 
 
 

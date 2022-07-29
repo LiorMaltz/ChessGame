@@ -91,6 +91,7 @@ bool show_light_window = false;
 bool show_data_window = false;
 bool InitializeWindows[5] = { true };
 
+
 // debug
 
 int highFace = -1;
@@ -971,6 +972,7 @@ void MyImGui(ImGuiIO& io, Scene& scene, GLFWwindow* window)
 			InitializeWindows[2] = false;
 			ImGui::SetWindowSize(ImVec2((float)screenWidth/2, (float)screenHeight/2));
 		}
+
 
 		glm::mat4 mat;
 		mat = scene.GetActiveCamera().GetViewTransformation();

@@ -51,54 +51,25 @@ void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const gl
 {
 	// builds the Coordinate system of the camera
 
-
-	// try
-	//vec3 zaxis = normalize(at - eye);
-	//vec3 xaxis = normalize(cross(normalize(up), zaxis));
-	//vec3 yaxis = normalize(cross(zaxis, xaxis));
-	//
-	//
-	//view_transformation[0][0] = xaxis.x;
-	//view_transformation[0][1] = xaxis.y;
-	//view_transformation[0][2] = xaxis.z;
-	//view_transformation[0][3] = 0;
-	//view_transformation[1][0] = yaxis.x;
-	//view_transformation[1][1] = yaxis.y;
-	//view_transformation[1][2] = yaxis.z;
-	//view_transformation[1][3] = 0;
-	//view_transformation[2][0] = zaxis.x;
-	//view_transformation[2][1] = zaxis.y;
-	//view_transformation[2][2] = zaxis.z;
-	//view_transformation[2][3] = 0;
-	//
-	//view_transformation[3][0] = eye.x;
-	//view_transformation[3][1] = eye.y;
-	//view_transformation[3][2] = eye.z;
-	//view_transformation[3][3] = 1;
-	//
-	//cameraRotation = view_transformation;
-	//cameraRotation[3][0] = cameraRotation[3][1] = cameraRotation[3][2] = 0;
-	//PrintMatrix(view_transformation);
-	//
-	//view_Inverse = glm::inverse(view_transformation);
-	//
-	//SetProjection();
-
 	//
 
 
 
-	//vec3 zaxis = normalize(at - eye);
-	//vec3 xaxis = -cross(zaxis, up));
-	//vec3 yaxis = -normalize(cross(xaxis, zaxis));
+	vec3 zaxis = normalize(at - eye);
+	vec3 xaxis = -normalize(cross(zaxis, up));
+	vec3 yaxis = -normalize(cross(xaxis, zaxis));
 	//
 	//vec4 t = vec4(eye.x, eye.y, eye.z, 1.0);
 	
+	view_transformation = mat4(vec4(xaxis, 0), vec4(yaxis, 0), -vec4(zaxis, 0), vec4(eye, 1));
+	//PrintMatrix(view_transformation);
+	//view_transformation = glm::lookAt(eye, at, up);
 	
-	view_transformation = glm::lookAt(eye, at, up);
-	
-	cameraRotation = view_transformation;
-	cameraRotation[3][0] = cameraRotation[3][1] = cameraRotation[3][2] = 0;
+	//cameraRotation = glm::rotate(view_transformation, glm::radians(180.0f), vec3(1, 0, 0));
+	//cameraRotation = mat4(1);
+	//PrintMatrix(cameraRotation);
+	cameraRotation = mat4(view_transformation);
+	cameraRotation[3][0] = cameraRotation[3][1] = cameraRotation[3][2] = 0; cameraRotation[2][2] = -cameraRotation[2][2];
 	
 	view_Inverse = glm::inverse(view_transformation);
 	
@@ -122,7 +93,8 @@ void Camera::SetProjection()
 	}
 	else
 	{
-		projection_transformation = glm::frustum(_left, _right, _down, _up, _near, _far);
+		//projection_transformation = transpose(frustum(_left, _right, _down, _up, -_far, -_near));
+		projection_transformation = frustum(_left, _right, _down, _up, _near, _far);
 		//projection_transformation = MultiplyMatrix(projection_transformation, viewVolume);
 	}
 
@@ -249,6 +221,7 @@ void Camera::TranslateCamera(glm::vec3& moveVec)
 
 	view_transformation = translate(view_transformation, moveVec);
 	view_Inverse = translate(view_Inverse, -moveVec);
+	//PrintMatrix(view_Inverse);
 	//view_transformation = MultiplyMatrix(view_transformation, TranslatingTransformation(moveVec));
 	//view_Inverse = MultiplyMatrix(view_Inverse, TranslatingTransformation(-moveVec));
 

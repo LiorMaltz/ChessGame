@@ -19,6 +19,13 @@ ChessPlayer::ChessPlayer(const int& time, const bool& blackElseWhite) : timer(ti
 	{
 		pieces[i] = new Pawn(blackElseWhite, id++);
 	}
+
+	// speciel vairbles
+	enPassantlocation[0] = -1;
+	enPassantlocation[1] = -1;
+	enPassantBool = false;
+
+
 }
 
 // Free all the dynamic allocated pieces
@@ -39,7 +46,7 @@ bool ChessPlayer::GetKingInThreat() const
 
 // piece methods
 
-Piece::Piece(const bool& blackElseWhite, const int& id) : blackElseWhite(blackElseWhite), pieceImage(NULL), pieceType(PieceType::DefaultType), id(id), model(NULL)
+Piece::Piece(const bool& blackElseWhite, const int& id) : blackElseWhite(blackElseWhite), pieceImage(NULL), pieceType(PieceType::DefaultType), id(id), model(NULL), stepDist(0.125028f) , modelScale(0.112f)
 {
 	locationOnBoard[0] = 0;
 	locationOnBoard[1] = 1;
@@ -69,7 +76,17 @@ void Piece::SetLocation(const int* loc)
 	locationOnBoard[1] = loc[1];
 }
 
+void Piece::MoveModelToLocation(const int* to)
+{
+	int xPar = 1; int yPar = 1;
+	float toLocation[2] = {to[0] - 3.5f, to[1] - 3.5f };
+	if (to[0] < 0)
+		xPar = -xPar;
+	if (to[1] < 0)
+		yPar = -yPar;
+	model->SetWorldLocation(vec3(toLocation[0] * stepDist + stepDist * xPar, toLocation[1] * stepDist + stepDist * yPar, -0.01));
 
+}
 
 Pawn::Pawn(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id) , firstMoove(true)
 {
@@ -92,11 +109,11 @@ void Pawn::InsertImage()
 
 }
 
-void Pawn::InitializeModelPlace(const float& stepDist, const float& scale)
+void Pawn::InitializeModelPlace()
 {
 	// First scale the model
 	//model->ScaleObject(vec3(0.125, 0.125, 0.125), true);
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;
@@ -119,7 +136,7 @@ void Pawn::InitializeModelPlace(const float& stepDist, const float& scale)
 
 }
 
-Rook::Rook(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id)
+Rook::Rook(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id), firstMoove(true)
 {
 	pieceType = PieceType::RookType;
 	InsertImage();
@@ -138,10 +155,10 @@ void Rook::InsertImage()
 	}
 
 }
-void Rook::InitializeModelPlace(const float& stepDist, const float& scale)
+void Rook::InitializeModelPlace()
 {
 	// First scale the model
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;
@@ -179,10 +196,10 @@ void Horse::InsertImage()
 
 }
 
-void Horse::InitializeModelPlace(const float& stepDist, const float& scale)
+void Horse::InitializeModelPlace()
 {
 	// First scale the model
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;
@@ -220,10 +237,10 @@ void Bishop::InsertImage()
 
 }
 
-void Bishop::InitializeModelPlace(const float& stepDist, const float& scale)
+void Bishop::InitializeModelPlace()
 {
 	// First scale the model
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;
@@ -241,7 +258,7 @@ void Bishop::InitializeModelPlace(const float& stepDist, const float& scale)
 	}
 }
 
-King::King(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id)
+King::King(const bool& blackElseWhite, const int& id) : Piece(blackElseWhite, id), firstMoove(true)
 {
 	pieceType = PieceType::KingType;
 	InsertImage();
@@ -261,10 +278,10 @@ void King::InsertImage()
 
 }
 
-void King::InitializeModelPlace(const float& stepDist, const float& scale)
+void King::InitializeModelPlace()
 {
 	// First scale the model
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;
@@ -296,10 +313,10 @@ void Queen::InsertImage()
 
 }
 
-void Queen::InitializeModelPlace(const float& stepDist, const float& scale)
+void Queen::InitializeModelPlace()
 {
 	// First scale the model
-	model->ScaleObject(vec3(scale, scale, scale), true);
+	model->ScaleObject(vec3(modelScale, modelScale, modelScale), true);
 
 	// Translate to the right place
 	int yPar;

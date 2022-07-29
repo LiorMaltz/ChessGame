@@ -20,6 +20,8 @@ public:
 	bool blackElseWhite;
 	int id;
 	int locationOnBoard[2];
+	float stepDist;
+	float modelScale;
 	
 
 	MeshModel* model;
@@ -28,8 +30,9 @@ public:
 	int GetID() const;
 	void SetModel(MeshModel* model);
 	void SetLocation(const int* loc);
+	void MoveModelToLocation(const int* to);
 	virtual void InsertImage() = 0;
-	virtual void InitializeModelPlace(const float& stepDist, const float& scale) = 0;
+	virtual void InitializeModelPlace() = 0;
 	virtual ~Piece();
 private:
 
@@ -42,7 +45,7 @@ class Pawn : public Piece
 public:
 	Pawn(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	virtual void InitializeModelPlace(const float& stepDist, const float& scale);
+	virtual void InitializeModelPlace();
 	bool firstMoove;
 };
 
@@ -53,7 +56,8 @@ class Rook : public Piece
 public:
 	Rook::Rook(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	void InitializeModelPlace(const float& stepDist, const float& scale);
+	void InitializeModelPlace();
+	bool firstMoove;
 };
 
 
@@ -62,7 +66,7 @@ class Horse : public Piece
 public:
 	Horse::Horse(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	void InitializeModelPlace(const float& stepDist, const float& scale);
+	void InitializeModelPlace();
 };
 
 
@@ -72,7 +76,7 @@ class Bishop : public Piece
 public:
 	Bishop::Bishop(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	void InitializeModelPlace(const float& stepDist, const float& scale);
+	void InitializeModelPlace();
 };
 
 
@@ -82,7 +86,8 @@ class King : public Piece
 public:
 	King::King(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	void InitializeModelPlace(const float& stepDist, const float& scale);
+	void InitializeModelPlace();
+	bool firstMoove;
 };
 
 
@@ -91,7 +96,7 @@ class Queen : public Piece
 public:
 	Queen::Queen(const bool& blackElseWhite, const int& id);
 	void virtual InsertImage();
-	void InitializeModelPlace(const float& stepDist, const float& scale);
+	void InitializeModelPlace();
 };
 
 
@@ -104,6 +109,10 @@ public:
 	bool blackElseWhite;
 	milliseconds timer;
 	Piece* pieces[16];
+
+	// En passant variables
+	int enPassantlocation[2];
+	bool enPassantBool;
 
 	ChessPlayer(const int& time, const bool& blackElseWhite);
 	~ChessPlayer();

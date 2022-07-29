@@ -116,7 +116,7 @@ void Renderer::Render(const Scene& scene, const glm::vec3& clear_color, ChessMat
 			// Set the uniform variables
 			//GLint ptr = glGetUniformLocation(program, "model");
 			glm::mat4 invertexXmodel = modelTransformation;
-			invertexXmodel[3][0] = -invertexXmodel[3][0];
+			//invertexXmodel[3][0] = -invertexXmodel[3][0];
 			glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &(invertexXmodel[0].x));
 			//glUniformMatrix4fv(glGetUniformLocation(program, "model"),1, GL_FALSE, &(modelTransformation[0].x));
 			glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &(cameraInverse[0].x));

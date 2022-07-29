@@ -9,13 +9,14 @@ bool QueenThreat(const ChessBoardCell chessBoard[][BOARD_COLS], const int* threa
 bool KingThreat(const int* threatLocation, const int* kingLocation);
 
 // move ligality examination declerations
-bool PawnMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& firstMove);
+bool PawnMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& firstMove, const bool& enPassantBool, const int* enPassentLocation);
 bool BishopMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn);
 bool HorseMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn);
 bool RookMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn);
-bool KingMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn);
+bool KingMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& castleLeft, const bool& castleRight, const bool& kingFirstMove);
 bool QueenMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn);
 
+enum piecesTitle {KING, QUEEN, ROOK_LEFT, ROOK_RIGHT, BISHOP_LEFT, BISHOP_RIGHT, HORSE_LEFT, HORSE_RIGHT};
 
 // When initialzing the game we decide the first turn should be of white, and we should  
 ChessMatch::ChessMatch(const int& time) : turn(WHITE)
@@ -35,14 +36,14 @@ ChessMatch::ChessMatch(const int& time) : turn(WHITE)
 		chessBoard[i][0].blackElseWhiteIsOn = WHITE;
 		chessBoard[i][0].cellIsOccupied = true;
 	}
-	chessBoard[0][0].piece = players[WHITE]->pieces[2];
-	chessBoard[1][0].piece = players[WHITE]->pieces[6];
-	chessBoard[2][0].piece = players[WHITE]->pieces[4];
-	chessBoard[3][0].piece = players[WHITE]->pieces[1];
-	chessBoard[4][0].piece = players[WHITE]->pieces[0];
-	chessBoard[5][0].piece = players[WHITE]->pieces[5];
-	chessBoard[6][0].piece = players[WHITE]->pieces[7];
-	chessBoard[7][0].piece = players[WHITE]->pieces[3];
+	chessBoard[0][0].piece = players[WHITE]->pieces[ROOK_LEFT];
+	chessBoard[1][0].piece = players[WHITE]->pieces[HORSE_LEFT];
+	chessBoard[2][0].piece = players[WHITE]->pieces[BISHOP_LEFT];
+	chessBoard[3][0].piece = players[WHITE]->pieces[QUEEN];
+	chessBoard[4][0].piece = players[WHITE]->pieces[KING];
+	chessBoard[5][0].piece = players[WHITE]->pieces[BISHOP_RIGHT];
+	chessBoard[6][0].piece = players[WHITE]->pieces[HORSE_RIGHT];
+	chessBoard[7][0].piece = players[WHITE]->pieces[ROOK_RIGHT];
 
 
 
@@ -62,14 +63,14 @@ ChessMatch::ChessMatch(const int& time) : turn(WHITE)
 		chessBoard[i][7].cellIsOccupied = true;
 	}
 
-	chessBoard[0][7].piece = players[BLACK]->pieces[2];
-	chessBoard[1][7].piece = players[BLACK]->pieces[6];
-	chessBoard[2][7].piece = players[BLACK]->pieces[4];
-	chessBoard[3][7].piece = players[BLACK]->pieces[1];
-	chessBoard[4][7].piece = players[BLACK]->pieces[0];
-	chessBoard[5][7].piece = players[BLACK]->pieces[5];
-	chessBoard[6][7].piece = players[BLACK]->pieces[7];
-	chessBoard[7][7].piece = players[BLACK]->pieces[3];
+	chessBoard[0][7].piece = players[BLACK]->pieces[ROOK_LEFT];
+	chessBoard[1][7].piece = players[BLACK]->pieces[HORSE_LEFT];
+	chessBoard[2][7].piece = players[BLACK]->pieces[BISHOP_LEFT];
+	chessBoard[3][7].piece = players[BLACK]->pieces[QUEEN];
+	chessBoard[4][7].piece = players[BLACK]->pieces[KING];
+	chessBoard[5][7].piece = players[BLACK]->pieces[BISHOP_RIGHT];
+	chessBoard[6][7].piece = players[BLACK]->pieces[HORSE_RIGHT];
+	chessBoard[7][7].piece = players[BLACK]->pieces[ROOK_RIGHT];
 
 	// Pawn placement
 	for (int i = 0; i < NUM_OF_PIECES / 2; i++)
@@ -79,7 +80,7 @@ ChessMatch::ChessMatch(const int& time) : turn(WHITE)
 		chessBoard[i][6].cellIsOccupied = true;
 	}
 
-	// Update pices positions
+	// Update pieces positions
 	for (int i = 0; i < BOARD_ROWS; i++)
 	{
 		for (int j = 0; j < BOARD_COLS; j++)
@@ -156,6 +157,9 @@ bool ChessMatch::Move(const int* from, const int* to)
 // Function to move the pieces on the board. will recieve two int[2] arrays that represet 'from' coordintes and 'to' coordintes on the chess table
 void ChessMatch::MakeMove(const int* from, const int* to)
 {
+	// unless pawn 2-stpes happened, i nullify en-passent 
+	players[turn]->enPassantBool = false;
+
 	ChessBoardCell* fromCell = &chessBoard[from[0]][from[1]];
 	ChessBoardCell* toCell = &chessBoard[to[0]][to[1]];
 	
@@ -171,6 +175,61 @@ void ChessMatch::MakeMove(const int* from, const int* to)
 		players[!turn]->pieces[kiaPieceID] = NULL;
 	}
 
+	// En Passent Move
+	else if((dynamic_cast<Pawn*>(chessBoard[from[0]][from[1]].piece) != NULL) && (to[0] != from[0]))
+	{
+		ChessBoardCell* toCell = &chessBoard[to[0]][turn ? to[1] + 1 : to[1] - 1];
+		toCell->piece->model->SetWorldLocation(vec3(-1, -1, -1));
+		int kiaPieceID = toCell->piece->GetID();
+		delete players[!turn]->pieces[kiaPieceID];
+		players[!turn]->pieces[kiaPieceID] = NULL;
+		toCell->cellIsOccupied = false;
+	}
+
+	// Castle Move. handeling here with only the rook cells
+	if ((dynamic_cast<King*>(chessBoard[from[0]][from[1]].piece) != NULL) && (abs(from[0] - to[0]) == 2))
+	{
+		// castle Right
+		if (from[0] < to[0])
+		{
+			ChessBoardCell* rookCell = &chessBoard[from[0] + 3][from[1]];
+			int rookRelocation[2] = { from[0] + 1 , from[1] };
+			rookCell->piece->SetLocation(rookRelocation);
+			rookCell->cellIsOccupied = false;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = true;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = turn;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].piece = rookCell->piece;
+
+
+			// move Rook - graphic part
+			rookCell->piece->model->TranslateObject(vec3(stepDistOnForSquere * (-2), stepDistOnForSquere * 0, 0), true);
+			rookCell->piece = NULL;
+		}
+
+		// castle left
+		else
+		{
+			ChessBoardCell* rookCell = &chessBoard[from[0] - 4][from[1]];
+			int rookRelocation[2] = { from[0] - 1 , from[1] };
+			rookCell->piece->SetLocation(rookRelocation);
+			rookCell->cellIsOccupied = false;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = true;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = turn;
+			chessBoard[rookRelocation[0]][rookRelocation[1]].piece = rookCell->piece;
+
+			// update location in the piece object
+			players[turn]->pieces[ROOK_LEFT]->locationOnBoard[0] = to[0];
+			players[turn]->pieces[ROOK_LEFT]->locationOnBoard[1] = to[1];
+
+			// move Rook - graphic part
+			rookCell->piece->model->TranslateObject(vec3(stepDistOnForSquere * (+3), stepDistOnForSquere * 0, 0), true);
+			rookCell->piece = NULL;
+		}
+
+
+	}
+	
+
 	toCell->piece = fromCell->piece;
 	fromCell->piece = NULL;
 	toCell->piece->SetLocation(to);
@@ -183,6 +242,47 @@ void ChessMatch::MakeMove(const int* from, const int* to)
 	players[turn]->pieces[currntPieceID]->locationOnBoard[0] = to[0];
 	players[turn]->pieces[currntPieceID]->locationOnBoard[1] = to[1];
 
+	// Special cases
+	
+	// Pawn first move
+	if (dynamic_cast<Pawn*>(toCell->piece) != NULL)
+	{
+		dynamic_cast<Pawn*>(toCell->piece)->firstMoove = false;
+		
+		// notify En-Passent could happen
+		if (abs(from[1] - to[1]) == 2)
+		{
+			players[turn]->enPassantBool = true;
+			players[turn]->enPassantlocation[0] = to[0];
+			players[turn]->enPassantlocation[1] = to[1];
+		}
+
+	}
+	
+	// Rook first move nullify. for castle
+	if (dynamic_cast<Rook*>(toCell->piece) != NULL)
+	{
+		dynamic_cast<Rook*>(toCell->piece)->firstMoove = false;
+	}
+	
+	// King first move nullify. for castle
+	if (dynamic_cast<King*>(toCell->piece) != NULL)
+	{
+		dynamic_cast<King*>(toCell->piece)->firstMoove = false;
+	}
+
+	// pawn upgrade
+	if (dynamic_cast<Pawn*>(toCell->piece) != NULL && ((turn == BLACK) && (to[1] == 0) || ((turn == WHITE) && (to[1] == 7))))
+	{
+		MeshModel* model = players[turn]->pieces[currntPieceID]->model;
+		delete players[turn]->pieces[currntPieceID];
+		players[turn]->pieces[currntPieceID] = new Queen(turn, currntPieceID);
+		players[turn]->pieces[currntPieceID]->SetModel(model);
+		model->buildTextureMap(players[turn]->pieces[currntPieceID]->pieceImage);
+		toCell->piece = players[turn]->pieces[currntPieceID];
+	}
+	
+	
 	// move the piece - graphic part
 	toCell->piece->model->TranslateObject(vec3(stepDistOnForSquere * (to[0] - from[0]), stepDistOnForSquere * (to[1] - from[1]), 0), true);
 
@@ -220,7 +320,8 @@ bool ChessMatch::TestMove(const int* from, const int* to)
 		switch (fromCell->piece->GetPieceType())
 		{
 		case PieceType::PawnType:
-			pieceMoveValid = PawnMove(chessBoard, from, to, turn, dynamic_cast<Pawn*>(fromCell->piece)->firstMoove);
+			
+			pieceMoveValid = PawnMove(chessBoard, from, to, turn, dynamic_cast<Pawn*>(fromCell->piece)->firstMoove, players[!turn]->enPassantBool, players[!turn]->enPassantlocation);
 			break;
 		case PieceType::BishopType:
 			pieceMoveValid = BishopMove(chessBoard, from, to, turn);
@@ -232,8 +333,14 @@ bool ChessMatch::TestMove(const int* from, const int* to)
 			pieceMoveValid = RookMove(chessBoard, from, to, turn);
 			break;
 		case PieceType::KingType:
-			pieceMoveValid = KingMove(chessBoard, from, to, turn);
+		{
+			int a = (2 > 1) ? 3 : 1;
+			bool castleLeftBool = (dynamic_cast<Rook*>(players[turn]->pieces[ROOK_LEFT] ) != NULL) ? dynamic_cast<Rook*>(players[turn]->pieces[ROOK_LEFT])->firstMoove : false;
+			bool castlerightBool = (dynamic_cast<Rook*>(players[turn]->pieces[ROOK_RIGHT]) != NULL) ? dynamic_cast<Rook*>(players[turn]->pieces[ROOK_RIGHT])->firstMoove : false;
+			bool kingFirstMove = dynamic_cast<King*>(players[turn]->pieces[KING])->firstMoove;
+			pieceMoveValid = KingMove(chessBoard, from, to, turn, castleLeftBool, castlerightBool, kingFirstMove);
 			break;
+		}
 		case PieceType::QueenType:
 			pieceMoveValid = QueenMove(chessBoard, from, to, turn);
 			break;
@@ -260,6 +367,30 @@ bool ChessMatch::TestMove(const int* from, const int* to)
 			players[turn]->pieces[0]->locationOnBoard[1] = to[1];
 		}
 
+		// Check legal castle
+		if ((dynamic_cast<King*>(chessBoard[from[0]][from[1]].piece) != NULL) && (abs(from[0] - to[0]) == 2))
+		{
+			// right castle
+			if (from[0] < to[0])
+			{
+				ChessBoardCell* rookCell = &chessBoard[from[0] + 3][from[1]];
+				int rookRelocation[2] = { from[0] + 1 , from[1] };
+				rookCell->cellIsOccupied = false;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = true;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = turn;
+
+			}
+			// left castle
+			else
+			{
+				ChessBoardCell* rookCell = &chessBoard[from[0] - 4][from[1]];
+				int rookRelocation[2] = { from[0] - 1 , from[1] };
+				rookCell->cellIsOccupied = false;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = true;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = turn;
+			}
+		}
+
 		fromCell->cellIsOccupied = false;
 		toCell->cellIsOccupied = true;
 		toCell->blackElseWhiteIsOn = turn;
@@ -276,9 +407,35 @@ bool ChessMatch::TestMove(const int* from, const int* to)
 		}
 
 
+		// restore rook position if necessary
+		if ((dynamic_cast<King*>(chessBoard[from[0]][from[1]].piece) != NULL) && (abs(from[0] - to[0]) == 2))
+		{
+			// right castle
+			if (from[0] < to[0])
+			{
+				ChessBoardCell* rookCell = &chessBoard[from[0] + 3][from[1]];
+				int rookRelocation[2] = { from[0] + 1 , from[1] };
+				rookCell->cellIsOccupied = true;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = false;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = !turn;
+
+			}
+			// left castle
+			else
+			{
+				ChessBoardCell* rookCell = &chessBoard[from[0] - 4][from[1]];
+				int rookRelocation[2] = { from[0] - 1 , from[1] };
+				rookCell->cellIsOccupied = true;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].cellIsOccupied = false;
+				chessBoard[rookRelocation[0]][rookRelocation[1]].blackElseWhiteIsOn = !turn;
+			}
+		}
+
+
 		// Valid move
 		if (!KingInThreat)
 		{
+
 			return true;
 		}
 	}
@@ -353,11 +510,11 @@ bool ChessMatch::CheckKingThreat()
 
 bool PawnThreat(const int* threatLocation, const int* kingLocation, const Turn& turn) 
 {
-	if (abs(threatLocation[1] - kingLocation[1]) == 1)
+	if (abs(threatLocation[0] - kingLocation[0]) == 1)
 	{
-		if (turn == WHITE && (threatLocation[0] - kingLocation[0] == 1))
+		if (turn == WHITE && ((threatLocation[1] - kingLocation[1]) == 1))
 			return true;
-		if (turn == BLACK && (threatLocation[0] - kingLocation[0] == -1))
+		if (turn == BLACK && ((threatLocation[1] - kingLocation[1]) == -1))
 			return true;
 	}
 	return false;
@@ -565,7 +722,7 @@ bool RookThreat(const ChessBoardCell chessBoard[][BOARD_COLS], const int* threat
 				{
 					break;
 				}
-				threatToCheck[1]++;
+				threatToCheck[0]++;
 			}
 		}
 	}
@@ -593,15 +750,42 @@ bool KingThreat(const int* threatLocation, const int* kingLocation)
 
 // move legality examination functions
 
-bool PawnMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& firstMove)
+bool PawnMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& firstMove, const bool& enPassantBool, const int* enPassentLocation)
 {
-	if (from[0] == to[0] && (((to[1] - from[1]) == 1 || ((to[1] - from[1]) == 2 && firstMove) && !turn) || ((to[1] - from[1]) == -1 || ((to[1] - from[1]) == -2 && firstMove) && turn)))
+	// Pawn step forward
+	if (from[0] == to[0] && (((to[1] - from[1]) == 1 && !turn) || ((to[1] - from[1]) == -1 && turn)))
 	{
 		if (!chessBoard[to[0]][to[1]].cellIsOccupied)
 		{
 			return true;
 		}
 	}
+	// Pawn double first step
+	if (from[0] == to[0] && (((to[1] - from[1]) == 2 && firstMove && !turn) || ((to[1] - from[1]) == -2 && firstMove && turn)))
+	{
+		if (!chessBoard[to[0]][to[1]].cellIsOccupied && ((!chessBoard[to[0]][to[1] - 1].cellIsOccupied && turn == WHITE) || (!chessBoard[to[0]][to[1] + 1].cellIsOccupied && turn == BLACK)))
+		{
+			return true;
+		}
+	}
+
+	// Pawn eat
+	else if ((((from[1] - to[1] == 1 && turn) && abs(from[0] - to[0]) == 1  ) || ((from[1] - to[1] == -1 && !turn) && abs(from[0] - to[0]) == 1)))
+	{
+		// Normal eating move
+		if ((chessBoard[to[0]][to[1]].blackElseWhiteIsOn != turn && chessBoard[to[0]][to[1]].cellIsOccupied))
+		{
+			return true;
+		}
+		// en-passent eating move
+		if (enPassantBool && to[0] == enPassentLocation[0] && ((abs(to[1] - enPassentLocation[1] == 1) && !turn) || (abs(to[1] - enPassentLocation[1] == -1) && turn)))
+		{
+			return true;
+		}
+		
+	}
+
+
 	return false;
 }
 
@@ -703,9 +887,24 @@ bool RookMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, co
 	return true;
 }
 
-bool KingMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn)
+bool KingMove(const ChessBoardCell chessBoard[][BOARD_COLS], const int* from, const int* to, const Turn& turn, const bool& castleLeft, const bool& castleRight, const bool& kingFirstMove)
 {
-	// Or to squere is occupied, or in not a reachable squere to the king
+	// Left Castle
+	if (castleLeft && kingFirstMove)
+	{
+		if (!chessBoard[from[0]-1][from[1]].cellIsOccupied && !chessBoard[from[0] - 2][from[1]].cellIsOccupied && !chessBoard[from[0] - 3][from[1]].cellIsOccupied && to[0] == (from[0] - 2) && to[1] == from[1])
+		{
+			return true;
+		}
+	}
+	if (castleRight && kingFirstMove)
+	{
+		if (!chessBoard[from[0] + 1][from[1]].cellIsOccupied && !chessBoard[from[0] + 2][from[1]].cellIsOccupied && to[0] == (from[0] + 2) && to[1] == from[1])
+		{
+			return true;
+		}
+	}
+	// Or 'to' squere is occupied, or in not a reachable squere to the king
 	if (!(abs(from[0] - to[0]) <= 1 && abs(from[1] - to[1]) <= 1) || (chessBoard[to[0]][to[1]].cellIsOccupied && turn == chessBoard[to[0]][to[1]].blackElseWhiteIsOn))
 	{
 		return false;

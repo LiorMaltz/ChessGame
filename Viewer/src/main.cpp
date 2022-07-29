@@ -210,6 +210,7 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 	int screenWidth, screenHeight;
 	glfwGetWindowSize(window, &screenWidth, &screenHeight);
 	float keySpeed = 10.0f;
+	glm::mat4 cameraRotation = scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix();
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
 		float scale = scene.GetActiveCamera().GetViewVolumeHeight()/(float)screenHeight;
@@ -218,7 +219,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { 0,keySpeed * scale,0 };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
@@ -229,7 +231,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { 0,-keySpeed * scale,0 };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
@@ -240,7 +243,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { -keySpeed * scale, 0, 0 };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
@@ -251,7 +255,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { keySpeed * scale, 0, 0 };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -262,7 +267,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { 0, 0, keySpeed * scale };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -273,7 +279,8 @@ void KeyBoardMouseEvents(Scene& scene, GLFWwindow* window, ImGuiIO& io, Renderer
 			scale *= 20;
 		}
 		glm::vec3 keyboardMoveVec = { 0, 0, -keySpeed * scale };
-		keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		//keyboardMoveVec = MultiplyVectorMatrix(scene.GetCamera(scene.GetActiveCameraIndex()).GetRotationMatrix(), { keyboardMoveVec,1 });
+		keyboardMoveVec = cameraRotation * vec4(keyboardMoveVec, 1);
 		scene.GetCamera(scene.GetActiveCameraIndex()).TranslateCamera(keyboardMoveVec);
 	}
 
@@ -451,7 +458,7 @@ void InitializeChessModels(Scene& scene , ChessMatch* chessMatch)
 	{
 		AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->GetPlayer(WHITE)->pieces[i]->pieceImage);
 		chessMatch->GetPlayer(WHITE)->pieces[i]->SetModel(&scene.GetModel(scene.GetModelCount() - 1));
-		chessMatch->GetPlayer(WHITE)->pieces[i]->InitializeModelPlace(0.125028f, 0.112f);
+		chessMatch->GetPlayer(WHITE)->pieces[i]->InitializeModelPlace();
 	}
 
 	// Initialize black
@@ -460,7 +467,7 @@ void InitializeChessModels(Scene& scene , ChessMatch* chessMatch)
 	{
 		AddModel("../Data/ChessData/ChessBoard.obj", scene, chessMatch->GetPlayer(BLACK)->pieces[i]->pieceImage);
 		chessMatch->GetPlayer(BLACK)->pieces[i]->SetModel(&scene.GetModel(scene.GetModelCount() - 1));
-		chessMatch->GetPlayer(BLACK)->pieces[i]->InitializeModelPlace(0.125028f, 0.1f);
+		chessMatch->GetPlayer(BLACK)->pieces[i]->InitializeModelPlace();
 	}
 }
 
